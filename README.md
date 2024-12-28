@@ -3,8 +3,8 @@
 [![license](https://img.shields.io/github/license/suous/RecNeXt)](https://github.com/suous/RecNeXt/blob/main/LICENSE)
 
 <div style="display: flex; justify-content: space-between;">
-    <img src="figures/RecConvA.png" alt="RecConvA" style="width: 55%;">
-    <img src="figures/code.png" alt="code" style="width: 45%;">
+    <img src="figures/RecConvA.png" alt="RecConvA" style="width: 54%;">
+    <img src="figures/code.png" alt="code" style="width: 44%;">
 </div>
 
 <details>
