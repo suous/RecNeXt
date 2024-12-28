@@ -1,0 +1,1 @@
+PORT=12345 ./dist_test.sh configs/mask_rcnn_recnext_m3_fpn_1x_coco.py det_pretrain/recnext_m3_coco.pth 8 --eval bbox segm

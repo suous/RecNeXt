@@ -1,0 +1,1 @@
+./dist_train.sh configs/mask_rcnn_recnext_m3_fpn_1x_coco.py 8
