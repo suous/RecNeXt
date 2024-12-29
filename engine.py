@@ -43,8 +43,9 @@ def train_one_epoch(model: torch.nn.Module, criterion: DistillationLoss,
         if mixup_fn is not None:
             samples, targets = mixup_fn(samples, targets)
 
+        # Recursive decomposition (especially for larger models or larger batch size) may introduce numerical instability during mixed precision training, which can be alleviated by using fixed-point or BFloat16 arithmetic.
+        # with torch.autocast(device_type='cuda', dtype=torch.bfloat16):
         with torch.cuda.amp.autocast():
-        # with torch.autocast(device_type='gpu', dtype=torch.bfloat16):
             outputs = model(samples)
             loss = criterion(samples, outputs, targets)
 
@@ -88,9 +89,9 @@ def evaluate(data_loader, model, device):
         images = images.to(device, non_blocking=True)
         target = target.to(device, non_blocking=True)
 
-        # compute output
+        # Recursive decomposition (especially for larger models or larger batch size) may introduce numerical instability during mixed precision training, which can be alleviated by using fixed-point or BFloat16 arithmetic.
+        # with torch.autocast(device_type='cuda', dtype=torch.bfloat16):
         with torch.cuda.amp.autocast():
-        # with torch.autocast(device_type='gpu', dtype=torch.bfloat16):
             output = model(images)
             loss = criterion(output, target)
 
