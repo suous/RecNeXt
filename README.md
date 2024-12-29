@@ -52,6 +52,7 @@ RecNeXt-M3 outperforms RepViT-M1.1 by 1.9 $AP^{box}$ on COCO with similar FLOPs.
 This innovation provides a promising avenue towards designing efficient and compact networks across various modalities.
 
 > Top-1 accuracy is evaluated on ImageNet-1K and the latency is assessed using an **iPhone 13 running iOS 18**, where all models are formatted into *mlmodel*.
+
 ![Performance](figures/performance.png)
 
 <details>
