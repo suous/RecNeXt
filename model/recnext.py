@@ -51,157 +51,6 @@ class RecConv2d(nn.Module):
         return x
     '''
 
-'''
-# bilinear upsample can be replaced by convtranspose2d
-class RecConv2d(nn.Module):
-    def __init__(self, in_channels, kernel_size=5, bias=False, level=2):
-        super().__init__()
-        self.level = level
-        kwargs = {
-            'in_channels': in_channels, 
-            'out_channels': in_channels, 
-            'groups': in_channels,
-            'kernel_size': kernel_size, 
-            'padding': kernel_size // 2, 
-            'bias': bias, 
-        }
-        self.down = nn.Conv2d(stride=2, **kwargs)
-        self.convs = nn.ModuleList([nn.Conv2d(**kwargs) for _ in range(level+1)])
-
- .      # this is the simplest modification, only support resoltions like 256, 384, etc
-        kwargs['kernel_size'] = kernel_size + 1
-        self.up = nn.ConvTranspose2d(stride=2, **kwargs)
-
-    def forward(self, x):
-        i = x
-        features = []
-        for _ in range(self.level):
-            x, s = self.down(x), x.shape[2:]
-            features.append((x, s))
-
-        x = 0
-        for conv, (f, s) in zip(self.convs, reversed(features)):
-            x = self.up(conv(f + x))
-        return self.convs[self.level](i + x)
-'''
-
-'''
-# recursive decomposition on both spatial and channel dimensions
-class RecConv2d(nn.Module):
-    def __init__(self, in_channels, kernel_size=5, bias=False, level=2):
-        super().__init__()
-        self.level = level
-        kwargs = {'kernel_size': kernel_size, 'padding': kernel_size // 2, 'bias': bias}
-        downs = []
-        for l in range(level):
-            channels = in_channels // (2 ** (l+1))
-            downs.append(nn.Conv2d(in_channels=channels, out_channels=channels, groups=channels, stride=2, **kwargs))
-        self.downs = nn.ModuleList(downs)
-
-        convs = []
-        for l in range(level+1):
-            channels = in_channels // (2 ** l)
-            convs.append(nn.Conv2d(in_channels=channels, out_channels=channels, groups=channels, **kwargs))
-        self.convs = nn.ModuleList(reversed(convs))
-
-    def forward(self, x):
-        features = []
-        for down in self.downs:
-            r, x = torch.chunk(x, 2, dim=1)
-            x, s = down(x), x.shape[2:]
-            features.append((r, s))
-
-        for conv, (r, s) in zip(self.convs, reversed(features)):
-            x = torch.cat([r, nn.functional.interpolate(conv(x), size=s, mode='bilinear')], dim=1)
-        return self.convs[self.level](x)
-'''
- 
-'''
-# RecConv Variant A
-# recursive decomposition on both spatial and channel dimensions
-# downsample and upsample through group convolutions
-class RecConv2d(nn.Module):
-    def __init__(self, in_channels, kernel_size=5, bias=False, level=2):
-        super().__init__()
-        self.level = level
-        kwargs = {'kernel_size': kernel_size, 'padding': kernel_size // 2, 'bias': bias}
-        downs = []
-        for l in range(level):
-            i_channels = in_channels // (2 ** l)
-            o_channels = in_channels // (2 ** (l+1))
-            downs.append(nn.Conv2d(in_channels=i_channels, out_channels=o_channels, groups=o_channels, stride=2, **kwargs))
-        self.downs = nn.ModuleList(downs)
-
-        convs = []
-        for l in range(level+1):
-            channels = in_channels // (2 ** l)
-            convs.append(nn.Conv2d(in_channels=channels, out_channels=channels, groups=channels, **kwargs))
-        self.convs = nn.ModuleList(reversed(convs))
-
-        # this is the simplest modification, only support resoltions like 256, 384, etc
-        kwargs['kernel_size'] = kernel_size + 1
-        ups = []
-        for l in range(level):
-            i_channels = in_channels // (2 ** (l+1))
-            o_channels = in_channels // (2 ** l)
-            ups.append(nn.ConvTranspose2d(in_channels=i_channels, out_channels=o_channels, groups=i_channels, stride=2, **kwargs))
-        self.ups = nn.ModuleList(reversed(ups))
-        
-    def forward(self, x):
-        i = x
-        features = []
-        for down in self.downs:
-            x, s = down(x), x.shape[2:]
-            features.append((x, s))
-
-        x = 0
-        for conv, up, (f, s) in zip(self.convs, self.ups, reversed(features)):
-            x = up(conv(f + x))
-        return self.convs[self.level](i + x)
-'''
-
-'''
-# RecConv Variant B
-# recursive decomposition on both spatial and channel dimensions
-# downsample using channel-wise split, followed by depthwise convolution with a stride of 2
-# upsample through channel-wise concatenation
-class RecConv2d(nn.Module):
-    def __init__(self, in_channels, kernel_size=5, bias=False, level=2):
-        super().__init__()
-        self.level = level
-        kwargs = {'kernel_size': kernel_size, 'padding': kernel_size // 2, 'bias': bias}
-        downs = []
-        for l in range(level):
-            channels = in_channels // (2 ** (l+1))
-            downs.append(nn.Conv2d(in_channels=channels, out_channels=channels, groups=channels, stride=2, **kwargs))
-        self.downs = nn.ModuleList(downs)
-
-        convs = []
-        for l in range(level+1):
-            channels = in_channels // (2 ** l)
-            convs.append(nn.Conv2d(in_channels=channels, out_channels=channels, groups=channels, **kwargs))
-        self.convs = nn.ModuleList(reversed(convs))
-
- .      # this is the simplest modification, only support resoltions like 256, 384, etc
-        kwargs['kernel_size'] = kernel_size + 1
-        ups = []
-        for l in range(level):
-            channels = in_channels // (2 ** (l+1))
-            ups.append(nn.ConvTranspose2d(in_channels=channels, out_channels=channels, groups=channels, stride=2, **kwargs))
-        self.ups = nn.ModuleList(reversed(ups))
-
-    def forward(self, x):
-        features = []
-        for down in self.downs:
-            r, x = torch.chunk(x, 2, dim=1)
-            x, s = down(x), x.shape[2:]
-            features.append((r, s))
-
-        for conv, up, (r, s) in zip(self.convs, self.ups, reversed(features)):
-            x = torch.cat([r, up(conv(x))], dim=1)
-        return self.convs[self.level](x)
-'''
-
 
 class ConvNorm(nn.Sequential):
     def __init__(
@@ -511,3 +360,153 @@ if __name__ == "__main__":
     except ModuleNotFoundError:
         pass
 
+'''
+# bilinear upsample can be replaced by convtranspose2d
+class RecConv2d(nn.Module):
+    def __init__(self, in_channels, kernel_size=5, bias=False, level=2):
+        super().__init__()
+        self.level = level
+        kwargs = {
+            'in_channels': in_channels,
+            'out_channels': in_channels,
+            'groups': in_channels,
+            'kernel_size': kernel_size,
+            'padding': kernel_size // 2,
+            'bias': bias,
+        }
+        self.down = nn.Conv2d(stride=2, **kwargs)
+        self.convs = nn.ModuleList([nn.Conv2d(**kwargs) for _ in range(level+1)])
+
+ .      # this is the simplest modification, only support resoltions like 256, 384, etc
+        kwargs['kernel_size'] = kernel_size + 1
+        self.up = nn.ConvTranspose2d(stride=2, **kwargs)
+
+    def forward(self, x):
+        i = x
+        features = []
+        for _ in range(self.level):
+            x, s = self.down(x), x.shape[2:]
+            features.append((x, s))
+
+        x = 0
+        for conv, (f, s) in zip(self.convs, reversed(features)):
+            x = self.up(conv(f + x))
+        return self.convs[self.level](i + x)
+'''
+
+'''
+# recursive decomposition on both spatial and channel dimensions
+class RecConv2d(nn.Module):
+    def __init__(self, in_channels, kernel_size=5, bias=False, level=2):
+        super().__init__()
+        self.level = level
+        kwargs = {'kernel_size': kernel_size, 'padding': kernel_size // 2, 'bias': bias}
+        downs = []
+        for l in range(level):
+            channels = in_channels // (2 ** (l+1))
+            downs.append(nn.Conv2d(in_channels=channels, out_channels=channels, groups=channels, stride=2, **kwargs))
+        self.downs = nn.ModuleList(downs)
+
+        convs = []
+        for l in range(level+1):
+            channels = in_channels // (2 ** l)
+            convs.append(nn.Conv2d(in_channels=channels, out_channels=channels, groups=channels, **kwargs))
+        self.convs = nn.ModuleList(reversed(convs))
+
+    def forward(self, x):
+        features = []
+        for down in self.downs:
+            r, x = torch.chunk(x, 2, dim=1)
+            x, s = down(x), x.shape[2:]
+            features.append((r, s))
+
+        for conv, (r, s) in zip(self.convs, reversed(features)):
+            x = torch.cat([r, nn.functional.interpolate(conv(x), size=s, mode='bilinear')], dim=1)
+        return self.convs[self.level](x)
+'''
+
+'''
+# RecConv Variant A
+# recursive decomposition on both spatial and channel dimensions
+# downsample and upsample through group convolutions
+class RecConv2d(nn.Module):
+    def __init__(self, in_channels, kernel_size=5, bias=False, level=2):
+        super().__init__()
+        self.level = level
+        kwargs = {'kernel_size': kernel_size, 'padding': kernel_size // 2, 'bias': bias}
+        downs = []
+        for l in range(level):
+            i_channels = in_channels // (2 ** l)
+            o_channels = in_channels // (2 ** (l+1))
+            downs.append(nn.Conv2d(in_channels=i_channels, out_channels=o_channels, groups=o_channels, stride=2, **kwargs))
+        self.downs = nn.ModuleList(downs)
+
+        convs = []
+        for l in range(level+1):
+            channels = in_channels // (2 ** l)
+            convs.append(nn.Conv2d(in_channels=channels, out_channels=channels, groups=channels, **kwargs))
+        self.convs = nn.ModuleList(reversed(convs))
+
+        # this is the simplest modification, only support resoltions like 256, 384, etc
+        kwargs['kernel_size'] = kernel_size + 1
+        ups = []
+        for l in range(level):
+            i_channels = in_channels // (2 ** (l+1))
+            o_channels = in_channels // (2 ** l)
+            ups.append(nn.ConvTranspose2d(in_channels=i_channels, out_channels=o_channels, groups=i_channels, stride=2, **kwargs))
+        self.ups = nn.ModuleList(reversed(ups))
+
+    def forward(self, x):
+        i = x
+        features = []
+        for down in self.downs:
+            x, s = down(x), x.shape[2:]
+            features.append((x, s))
+
+        x = 0
+        for conv, up, (f, s) in zip(self.convs, self.ups, reversed(features)):
+            x = up(conv(f + x))
+        return self.convs[self.level](i + x)
+'''
+
+'''
+# RecConv Variant B
+# recursive decomposition on both spatial and channel dimensions
+# downsample using channel-wise split, followed by depthwise convolution with a stride of 2
+# upsample through channel-wise concatenation
+class RecConv2d(nn.Module):
+    def __init__(self, in_channels, kernel_size=5, bias=False, level=2):
+        super().__init__()
+        self.level = level
+        kwargs = {'kernel_size': kernel_size, 'padding': kernel_size // 2, 'bias': bias}
+        downs = []
+        for l in range(level):
+            channels = in_channels // (2 ** (l+1))
+            downs.append(nn.Conv2d(in_channels=channels, out_channels=channels, groups=channels, stride=2, **kwargs))
+        self.downs = nn.ModuleList(downs)
+
+        convs = []
+        for l in range(level+1):
+            channels = in_channels // (2 ** l)
+            convs.append(nn.Conv2d(in_channels=channels, out_channels=channels, groups=channels, **kwargs))
+        self.convs = nn.ModuleList(reversed(convs))
+
+ .      # this is the simplest modification, only support resoltions like 256, 384, etc
+        kwargs['kernel_size'] = kernel_size + 1
+        ups = []
+        for l in range(level):
+            channels = in_channels // (2 ** (l+1))
+            ups.append(nn.ConvTranspose2d(in_channels=channels, out_channels=channels, groups=channels, stride=2, **kwargs))
+        self.ups = nn.ModuleList(reversed(ups))
+
+    def forward(self, x):
+        features = []
+        for down in self.downs:
+            r, x = torch.chunk(x, 2, dim=1)
+            x, s = down(x), x.shape[2:]
+            features.append((r, s))
+
+        for conv, up, (r, s) in zip(self.convs, self.ups, reversed(features)):
+            x = torch.cat([r, up(conv(x))], dim=1)
+        return self.convs[self.level](x)
+'''

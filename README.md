@@ -51,6 +51,8 @@ Specifically, RecConv achieves a parameter expansion of only $\ell+2$ times and 
 RecNeXt-M3 outperforms RepViT-M1.1 by 1.9 $AP^{box}$ on COCO with similar FLOPs.
 This innovation provides a promising avenue towards designing efficient and compact networks across various modalities.
 
+> Top-1 accuracy is evaluated on ImageNet-1K and the latency is assessed using an **iPhone 13 running iOS 18**, where all models are formatted into *mlmodel*.
+![Performance](figures/performance.png)
 
 <details>
   <summary>
@@ -235,6 +237,19 @@ python main.py --eval --model recnext_m1 --resume pretrain/recnext_m1_distill_30
 For example, to evaluate RecNeXt-M1 with the fused model: [![Colab](https://colab.research.google.com/assets/colab-badge.svg)](https://colab.research.google.com/github/suous/RecNeXt/blob/main/demo/fused_model_evaluation.ipynb)
 ```
 python fuse_eval.py --model recnext_m1 --resume pretrain/recnext_m1_distill_300e_fused.pt --data-path ~/imagenet
+```
+
+### Extract model for publishing
+
+```
+# without distillation
+python publish.py --model_name recnext_m1 --checkpoint_path pretrain/checkpoint_best.pth --epochs 300
+
+# with distillation
+python publish.py --model_name recnext_m1 --checkpoint_path pretrain/checkpoint_best.pth --epochs 300 --distillation
+
+# fused model
+python publish.py --model_name recnext_m1 --checkpoint_path pretrain/checkpoint_best.pth --epochs 300 --fused
 ```
 
 ## Downstream Tasks
