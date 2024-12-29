@@ -148,10 +148,7 @@ class RecNextStem(nn.Module):
 class MetaNeXtBlock(nn.Module):
     def __init__(self, in_channels, mlp_ratio, act_layer=nn.GELU, stage=0):
         super().__init__()
-        # level, kernel_size = 3 - stage, 7
-        # self.token_mixer = RecConv2d(in_channels, level=level, kernel_size=kernel_size) if level >0 else nn.Conv2d(in_channels, in_channels, kernel_size=kernel_size, padding=kernel_size//2, groups=in_channels, bias=False)
-        # self.token_mixer = nn.Conv2d(in_channels, in_channels, kernel_size=11, padding=5, groups=in_channels)
-        self.token_mixer = RecConv2d(in_channels, level=4-stage, kernel_size=7) 
+        self.token_mixer = RecConv2d(in_channels, level=4-stage, kernel_size=5) 
         self.norm = nn.BatchNorm2d(in_channels)
         self.channel_mixer = mlp(in_channels, in_channels * mlp_ratio, act_layer=act_layer)
 
