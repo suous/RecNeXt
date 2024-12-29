@@ -71,7 +71,7 @@ This innovation provides a promising avenue towards designing efficient and comp
 <br/>
 
 **UPDATES** 🔥
-- **2024/06/25**: Uploaded checkpoints and training logs of recnext-M1 - M5.
+- **2024/12/29**: Uploaded checkpoints and training logs of recnext-M1 - M5.
 
 ## Classification on ImageNet-1K
 
