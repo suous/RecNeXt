@@ -480,10 +480,10 @@ class RecConv2d(nn.Module):
 
 ## Limitations
 
-1. The scalability of RecNeXt lags behind the SOTA lightweight models without knowledge distillation, where larger variants experience performance saturation and increased latency.
-2. RecNeXt exhibits the lowest throughput among models of comparable parameter size due to extensive use of bilinear interpolation, which can be mitigated by employing transposed convolution.
-3. The recursive decomposition may introduce numerical instability during mixed precision training, which can be alleviated by using fixed-point or BFloat16 arithmetic.
-4. Compatibility issues with bilinear interpolation and transposed convolution on certain iOS versions may also result in performance degradation.
+1. The **scalability** of RecNeXt lags behind the SOTA lightweight models without knowledge distillation, where larger variants experience performance saturation and increased latency.
+2. RecNeXt exhibits the lowest **throughput** among models of comparable parameter size due to extensive use of bilinear interpolation, which can be mitigated by employing transposed convolution.
+3. The recursive decomposition may introduce **numerical instability** during mixed precision training, which can be alleviated by using fixed-point or BFloat16 arithmetic.
+4. **Compatibility issues** with bilinear interpolation and transposed convolution on certain iOS versions may also result in performance degradation.
 
 ## Acknowledgement
 
