@@ -1,6 +1,8 @@
-# RecNeXt: Efficient Recursive Convolutions for Multi-Frequency Representations
+# [RecNeXt: Efficient Recursive Convolutions for Multi-Frequency Representations](https://arxiv.org/abs/2412.19628)
 
 [![license](https://img.shields.io/github/license/suous/RecNeXt)](https://github.com/suous/RecNeXt/blob/main/LICENSE)
+[![arXiv](https://img.shields.io/badge/arXiv-2406.16004-red)](https://arxiv.org/abs/2412.19628)
+
 
 <div style="display: flex; justify-content: space-between;">
     <img src="figures/RecConvA.png" alt="RecConvA" style="width: 52%;">
