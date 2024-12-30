@@ -492,3 +492,18 @@ Classification (ImageNet) code base is partly built with [LeViT](https://github.
 The detection and segmentation pipeline is from [MMCV](https://github.com/open-mmlab/mmcv) ([MMDetection](https://github.com/open-mmlab/mmdetection) and [MMSegmentation](https://github.com/open-mmlab/mmsegmentation)). 
 
 Thanks for the great implementations! 
+
+## Citation
+
+If our code or models help your work, please cite our papers and give us a star 🌟!
+
+```BibTeX
+@misc{zhao2024recnext,
+      title={RecNeXt: Efficient Recursive Convolutions for Multi-Frequency Representations},
+      author={Mingshu Zhao and Yi Luo and Yong Ouyang},
+      year={2024},
+      eprint={2412.19628},
+      archivePrefix={arXiv},
+      primaryClass={cs.CV}
+}
+```
