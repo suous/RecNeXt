@@ -11,7 +11,7 @@
 
 <details>
   <summary>
-  <font size="+1">RecConv Details</font>
+  <span style="font-size: larger; ">RecConv Details</span>
   </summary>
 
   ```python
@@ -59,7 +59,7 @@ This innovation provides a promising avenue towards designing efficient and comp
 
 <details>
   <summary>
-  <font size="+1">Conclusion</font>
+  <span style="font-size: larger; ">Conclusion</span>
   </summary>
     This paper introduces a straightforward and versatile recursive decomposition strategy that leverages small-kernel convolutions to construct multi-frequency representations, establishing a linear relationship between parameter growth and decomposition levels.
     This innovation guarantees that the computational complexity at each decomposition level follows a geometric progression, diminishing exponentially with increasing depth.
@@ -73,7 +73,8 @@ This innovation provides a promising avenue towards designing efficient and comp
 <br/>
 
 **UPDATES** 🔥
-- **2024/12/29**: Uploaded checkpoints and training logs of recnext-M1 - M5.
+- **2025/01/02**: Uploaded checkpoints and training logs of RecNeXt-M0.
+- **2024/12/29**: Uploaded checkpoints and training logs of RecNeXt-M1 - M5.
 
 ## Classification on ImageNet-1K
 
@@ -85,6 +86,7 @@ We report the top-1 accuracy on ImageNet-1K with and without distillation using 
 
 | Model |    Top-1     | Params | MACs | Latency |                                                                                                Ckpt                                                                                                |                                                                                                    Fused                                                                                                     |                                                       Log                                                       |                                               Core ML                                               |
 |:------|:------------:|:------:|:----:|:-------:|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:---------------------------------------------------------------------------------------------------------------:|:---------------------------------------------------------------------------------------------------:|
+| M0    | 74.7 \| 73.2 |  2.5M  | 0.4G |  1.0ms  | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m0_distill_300e.pth) \| [norm](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m0_without_distill_300e.pth) | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m0_distill_300e_fused.pt) \| [norm](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m0_without_distill_300e_fused.pt) | [dist](./logs/distill/recnext_m0_distill_300e.txt) \| [norm](./logs/normal/recnext_m0_without_distill_300e.txt) | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m0_distill_300e_224.mlmodel) |
 | M1    | 79.2 \| 78.0 |  5.2M  | 0.9G |  1.4ms  | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m1_distill_300e.pth) \| [norm](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m1_without_distill_300e.pth) | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m1_distill_300e_fused.pt) \| [norm](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m1_without_distill_300e_fused.pt) | [dist](./logs/distill/recnext_m1_distill_300e.txt) \| [norm](./logs/normal/recnext_m1_without_distill_300e.txt) | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m1_distill_300e_224.mlmodel) |
 | M2    | 80.3 \| 79.2 |  6.8M  | 1.2G |  1.5ms  | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m2_distill_300e.pth) \| [norm](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m2_without_distill_300e.pth) | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m2_distill_300e_fused.pt) \| [norm](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m2_without_distill_300e_fused.pt) | [dist](./logs/distill/recnext_m2_distill_300e.txt) \| [norm](./logs/normal/recnext_m2_without_distill_300e.txt) | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m2_distill_300e_224.mlmodel) |
 | M3    | 80.9 \| 79.6 |  8.2M  | 1.4G |  1.6ms  | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m3_distill_300e.pth) \| [norm](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m3_without_distill_300e.pth) | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m3_distill_300e_fused.pt) \| [norm](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m3_without_distill_300e_fused.pt) | [dist](./logs/distill/recnext_m3_distill_300e.txt) \| [norm](./logs/normal/recnext_m3_without_distill_300e.txt) | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m3_distill_300e_224.mlmodel) |
@@ -94,15 +96,16 @@ We report the top-1 accuracy on ImageNet-1K with and without distillation using 
 
 ```bash
 # this script is used to validate the distillation results
-fd txt logs/distill -x bash -c 'echo -n "{} "; jq -c ".test_acc1" {} | jq -s max' | sort | awk '{printf "%.1f %s\n", $2, $1}' 
+fd txt logs/distill -x sh -c 'printf "%.1f %s\n" "$(jq -s "map(.test_acc1) | max" {})" "{}"' | sort -k2
 ```
 
 <details>
   <summary>
-  <font>output</font>
+  <span>output</span>
   </summary>
 
 ```
+74.7 logs/distill/recnext_m0_distill_300e.txt
 79.2 logs/distill/recnext_m1_distill_300e.txt
 80.3 logs/distill/recnext_m2_distill_300e.txt
 80.9 logs/distill/recnext_m3_distill_300e.txt
@@ -113,15 +116,16 @@ fd txt logs/distill -x bash -c 'echo -n "{} "; jq -c ".test_acc1" {} | jq -s max
 
 ```bash
 # this script is used to validate the results without distillation
-fd txt logs/normal -x bash -c 'echo -n "{} "; jq -c ".test_acc1" {} | jq -s max' | sort | awk '{printf "%.1f %s\n", $2, $1}' 
+fd txt logs/normal -x sh -c 'printf "%.1f %s\n" "$(jq -s "map(.test_acc1) | max" {})" "{}"' | sort -k2
 ```
 
 <details>
   <summary>
-  <font>output</font>
+  <span>output</span>
   </summary>
 
 ```
+73.2 logs/normal/recnext_m0_without_distill_300e.txt
 78.0 logs/normal/recnext_m1_without_distill_300e.txt
 79.2 logs/normal/recnext_m2_without_distill_300e.txt
 79.6 logs/normal/recnext_m3_without_distill_300e.txt
@@ -146,37 +150,44 @@ The latency reported in RecNeXt for iPhone 13 (iOS 18) uses the benchmark tool f
 
 <details>
 <summary>
+RecNeXt-M0
+</summary>
+<img src="./figures/latency/recnext_m0_224x224.png" alt="recnext_m0">
+</details>
+
+<details>
+<summary>
 RecNeXt-M1
 </summary>
-<img src="./figures/latency/recnext_m1_224x224.png" width=70%>
+<img src="./figures/latency/recnext_m1_224x224.png" alt="recnext_m1">
 </details>
 
 <details>
 <summary>
 RecNeXt-M2
 </summary>
-<img src="./figures/latency/recnext_m2_224x224.png" width=70%>
+<img src="./figures/latency/recnext_m2_224x224.png" alt="recnext_m2">
 </details>
 
 <details>
 <summary>
 RecNeXt-M3
 </summary>
-<img src="./figures/latency/recnext_m3_224x224.png" width=70%>
+<img src="./figures/latency/recnext_m3_224x224.png" alt="recnext_m3">
 </details>
 
 <details>
 <summary>
 RecNeXt-M4
 </summary>
-<img src="./figures/latency/recnext_m4_224x224.png" width=70%>
+<img src="./figures/latency/recnext_m4_224x224.png" alt="recnext_m4">
 </details>
 
 <details>
 <summary>
 RecNeXt-M5
 </summary>
-<img src="./figures/latency/recnext_m5_224x224.png" width=70%>
+<img src="./figures/latency/recnext_m5_224x224.png" alt="recnext_m5">
 </details>
 
 Tips: export the model to Core ML model
@@ -268,12 +279,12 @@ python publish.py --model_name recnext_m1 --checkpoint_path pretrain/checkpoint_
 
 ```bash
 # this script is used to validate the detection results
-fd json detection/logs -x bash -c 'echo -n "{} "; tail -n +2 {} | jq -c ".bbox_mAP" {} | jq -s max | jq ".*100"' | sort | awk '{printf "%.1f %s\n", $2, $1}'
+fd json detection/logs -x sh -c 'printf "%.1f %s\n" "$(tail -n +2 {} | jq -s "map(.bbox_mAP) | max * 100")" "{}"' | sort -k2
 ```
 
 <details>
   <summary>
-  <font>output</font>
+  <span>output</span>
   </summary>
 
 ```
@@ -293,12 +304,12 @@ fd json detection/logs -x bash -c 'echo -n "{} "; tail -n +2 {} | jq -c ".bbox_m
 
 ```bash
 # this script is used to validate the segmentation results
-fd json segmentation/logs -x bash -c 'echo -n "{} "; tail -n +2 {} | jq -c ".mIoU" {} | jq -s max | jq ".*100"' | sort | awk '{printf "%.1f %s\n", $2, $1}'
+fd json segmentation/logs -x sh -c 'printf "%.1f %s\n" "$(tail -n +2 {} | jq -s "map(.mIoU) | max * 100")" "{}"' | sort -k2
 ```
 
 <details>
   <summary>
-  <font>output</font>
+  <span>output</span>
   </summary>
 
 ```
@@ -316,7 +327,7 @@ fd json segmentation/logs -x bash -c 'echo -n "{} "; tail -n +2 {} | jq -c ".mIo
 
 <details>
   <summary>
-  <font size="+1">Ablation Logs</font>
+  <span style="font-size: larger; ">Ablation Logs</span>
   </summary>
 
 <pre>
@@ -344,12 +355,12 @@ logs/ablation
 
 ```bash
 # this script is used to validate the ablation results
-fd txt logs/ablation -x bash -c 'echo -n "{} "; jq -c ".test_acc1" {} | jq -s max' | sort | awk '{printf "%.2f %s\n", $2, $1}' 
+fd txt logs/ablation -x sh -c 'printf "%.2f %s\n" "$(jq -s "map(.test_acc1) | max" {})" "{}"' | sort -k2
 ```
 
 <details>
   <summary>
-  <font>output</font>
+  <span>output</span>
   </summary>
 
 ```
@@ -385,7 +396,7 @@ fd txt logs/ablation -x bash -c 'echo -n "{} "; jq -c ".test_acc1" {} | jq -s ma
 
 <details>
   <summary>
-  <font size="+1">RecConv Variant Details</font>
+  <span style="font-size: larger; ">RecConv Variant Details</span>
   </summary>
 
 - **RecConv using group convolutions**
