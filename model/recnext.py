@@ -359,10 +359,15 @@ if __name__ == "__main__":
 
 '''
 # bilinear upsample can be replaced by convtranspose2d
+# element-wise addition and be replaced by hadamard product
+from operator import mul, add
+
+
 class RecConv2d(nn.Module):
-    def __init__(self, in_channels, kernel_size=5, bias=False, level=2):
+    def __init__(self, in_channels, kernel_size=5, bias=False, level=2, act_layer=None, agg=add):
         super().__init__()
         self.level = level
+        self.agg = agg
         kwargs = {
             'in_channels': in_channels,
             'out_channels': in_channels,
@@ -374,21 +379,21 @@ class RecConv2d(nn.Module):
         self.down = nn.Conv2d(stride=2, **kwargs)
         self.convs = nn.ModuleList([nn.Conv2d(**kwargs) for _ in range(level+1)])
 
- .      # this is the simplest modification, only support resoltions like 256, 384, etc
+        # this is the simplest modification, only support resoltions like 256, 384, etc
         kwargs['kernel_size'] = kernel_size + 1
-        self.up = nn.ConvTranspose2d(stride=2, **kwargs)
+        self.up = nn.ConvTranspose2d(stride=2, **kwargs) if act_layer is None else nn.Sequential(nn.ConvTranspose2d(stride=2, **kwargs), act_layer())
 
     def forward(self, x):
         i = x
         features = []
         for _ in range(self.level):
-            x, s = self.down(x), x.shape[2:]
-            features.append((x, s))
+            x = self.down(x)
+            features.append(x)
 
-        x = 0
-        for conv, (f, s) in zip(self.convs, reversed(features)):
-            x = self.up(conv(f + x))
-        return self.convs[self.level](i + x)
+        x = None
+        for conv, f in zip(self.convs, reversed(features)):
+            x = self.up(conv(f if x is None else self.agg(f, x)))
+        return self.convs[self.level](self.agg(i, x))
 '''
 
 '''
