@@ -462,11 +462,11 @@ class RecConv2d(nn.Module):
         i = x
         features = []
         for down in self.downs:
-            x, s = down(x), x.shape[2:]
-            features.append((x, s))
+            x = down(x)
+            features.append(x)
 
         x = 0
-        for conv, up, (f, s) in zip(self.convs, self.ups, reversed(features)):
+        for conv, up, f in zip(self.convs, self.ups, reversed(features)):
             x = up(conv(f + x))
         return self.convs[self.level](i + x)
 '''
@@ -505,10 +505,10 @@ class RecConv2d(nn.Module):
         features = []
         for down in self.downs:
             r, x = torch.chunk(x, 2, dim=1)
-            x, s = down(x), x.shape[2:]
-            features.append((r, s))
+            x = down(x)
+            features.append(r)
 
-        for conv, up, (r, s) in zip(self.convs, self.ups, reversed(features)):
+        for conv, up, r in zip(self.convs, self.ups, reversed(features)):
             x = torch.cat([r, up(conv(x))], dim=1)
         return self.convs[self.level](x)
 '''
