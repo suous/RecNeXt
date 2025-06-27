@@ -1,0 +1,2594 @@
+AMP: true
+AUG:
+  AUTO_AUGMENT: rand-m9-mstd0.5-inc1
+  COLOR_JITTER: 0.4
+  CUTMIX: 1.0
+  CUTMIX_MINMAX: null
+  MESA: 1.0
+  MIXUP: 0.8
+  MIXUP_MODE: batch
+  MIXUP_PROB: 1.0
+  MIXUP_SWITCH_PROB: 0.5
+  RECOUNT: 1
+  REMODE: pixel
+  REPROB: 0.25
+BASE:
+- ''
+DATA:
+  BATCH_SIZE: 256
+  CACHE_MODE: part
+  DATASET: imagenet
+  DATA_PATH: /data/imagenet
+  IMG_SIZE: 256
+  INTERPOLATION: bicubic
+  NUM_WORKERS: 16
+  PIN_MEMORY: true
+  ZIP_MODE: false
+EVAL_MODE: false
+LOCAL_RANK: 0
+MODEL:
+  DROP_PATH_RATE: 0.2
+  DROP_RATE: 0.0
+  LABEL_SMOOTHING: 0.1
+  MLLA:
+    APE: false
+    DEPTHS:
+    - 2
+    - 4
+    - 8
+    - 4
+    EMBED_DIM: 48
+    IN_CHANS: 3
+    MLP_RATIO: 4.0
+    NUM_HEADS:
+    - 2
+    - 4
+    - 8
+    - 16
+    PATCH_SIZE: 4
+    QKV_BIAS: true
+  NAME: mlla_mini
+  NUM_CLASSES: 1000
+  RESUME: ''
+  TYPE: mlla
+OUTPUT: output/300e/mlla_mini/recattn_nearest_interp
+PRINT_FREQ: 100
+SAVE_FREQ: 1
+SEED: 0
+TAG: recattn_nearest_interp
+TEST:
+  CROP: true
+THROUGHPUT_MODE: false
+TRAIN:
+  AUTO_RESUME: true
+  BASE_LR: 0.001
+  CLIP_GRAD: 5.0
+  COOLDOWN_EPOCHS: 0
+  EPOCHS: 300
+  LR_SCHEDULER:
+    DECAY_EPOCHS: 30
+    DECAY_RATE: 0.1
+    NAME: cosine
+  MIN_LR: 1.0e-05
+  OPTIMIZER:
+    BETAS:
+    - 0.9
+    - 0.999
+    EPS: 1.0e-08
+    MOMENTUM: 0.9
+    NAME: adamw
+  START_EPOCH: 0
+  USE_CHECKPOINT: false
+  WARMUP_EPOCHS: 20
+  WARMUP_LR: 1.0e-06
+  WEIGHT_DECAY: 0.05
+
+Creating model:mlla/mlla_mini
+MLLA(
+  (patch_embed): Stem(
+    (conv1): ConvLayer(
+      (conv): Conv2d(3, 24, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+      (norm): BatchNorm2d(24, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      (act): ReLU()
+    )
+    (conv2): Sequential(
+      (0): ConvLayer(
+        (conv): Conv2d(24, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (norm): BatchNorm2d(24, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (act): ReLU()
+      )
+      (1): ConvLayer(
+        (conv): Conv2d(24, 24, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), bias=False)
+        (norm): BatchNorm2d(24, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+    )
+    (conv3): Sequential(
+      (0): ConvLayer(
+        (conv): Conv2d(24, 192, kernel_size=(3, 3), stride=(2, 2), padding=(1, 1), bias=False)
+        (norm): BatchNorm2d(192, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+        (act): ReLU()
+      )
+      (1): ConvLayer(
+        (conv): Conv2d(192, 48, kernel_size=(1, 1), stride=(1, 1), bias=False)
+        (norm): BatchNorm2d(48, eps=1e-05, momentum=0.1, affine=True, track_running_stats=True)
+      )
+    )
+  )
+  (pos_drop): Dropout(p=0.0, inplace=False)
+  (layers): ModuleList(
+    (0): BasicLayer(
+      dim=48, input_resolution=(64, 64), level=1, depth=2
+      (blocks): ModuleList(
+        (0): MLLABlock(
+          dim=48, mlp_ratio=4.0, level=1, downsample=False
+          (cpe1): Conv2d(48, 48, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=48)
+          (norm1): LayerNorm((48,), eps=1e-05, elementwise_affine=True)
+          (i_proj): Linear(in_features=48, out_features=96, bias=True)
+          (o_proj): Conv2d(48, 48, kernel_size=(1, 1), stride=(1, 1))
+          (act): SiLU()
+          (agg): RecAttn2d(
+            (down): Sequential(
+              (0): Conv2d(48, 48, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2), groups=48)
+              (1): LinearAttention(
+                dim=48, num_heads=2
+                (qk): Conv2d(48, 96, kernel_size=(1, 1), stride=(1, 1), groups=2)
+                (elu): ELU(alpha=1.0)
+                (lepe): Conv2d(48, 48, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=48)
+                (rope): RoPE()
+              )
+              (2): Upsample(scale_factor=2.0, mode='nearest')
+            )
+            (conv): Conv2d(48, 48, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=48)
+          )
+          (cpe2): Conv2d(48, 48, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=48)
+          (norm2): LayerNorm((48,), eps=1e-05, elementwise_affine=True)
+          (mlp): Mlp(
+            (fc1): Linear(in_features=48, out_features=192, bias=True)
+            (act): GELU(approximate='none')
+            (fc2): Linear(in_features=192, out_features=48, bias=True)
+            (drop): Dropout(p=0.0, inplace=False)
+          )
+          (drop_path): Identity()
+        )
+        (1): MLLABlock(
+          dim=48, mlp_ratio=4.0, level=1, downsample=False
+          (cpe1): Conv2d(48, 48, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=48)
+          (norm1): LayerNorm((48,), eps=1e-05, elementwise_affine=True)
+          (i_proj): Linear(in_features=48, out_features=96, bias=True)
+          (o_proj): Conv2d(48, 48, kernel_size=(1, 1), stride=(1, 1))
+          (act): SiLU()
+          (agg): RecAttn2d(
+            (down): Sequential(
+              (0): Conv2d(48, 48, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2), groups=48)
+              (1): LinearAttention(
+                dim=48, num_heads=2
+                (qk): Conv2d(48, 96, kernel_size=(1, 1), stride=(1, 1), groups=2)
+                (elu): ELU(alpha=1.0)
+                (lepe): Conv2d(48, 48, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=48)
+                (rope): RoPE()
+              )
+              (2): Upsample(scale_factor=2.0, mode='nearest')
+            )
+            (conv): Conv2d(48, 48, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=48)
+          )
+          (cpe2): Conv2d(48, 48, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=48)
+          (norm2): LayerNorm((48,), eps=1e-05, elementwise_affine=True)
+          (mlp): Mlp(
+            (fc1): Linear(in_features=48, out_features=192, bias=True)
+            (act): GELU(approximate='none')
+            (fc2): Linear(in_features=192, out_features=48, bias=True)
+            (drop): Dropout(p=0.0, inplace=False)
+          )
+          (drop_path): DropPath(drop_prob=0.012)
+        )
+      )
+      (downsample): MLLABlock(
+        dim=48, mlp_ratio=4.0, level=0, downsample=True
+        (cpe1): Conv2d(48, 96, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2), groups=48)
+        (norm1): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+        (i_proj): Linear(in_features=96, out_features=192, bias=True)
+        (o_proj): Conv2d(96, 96, kernel_size=(1, 1), stride=(1, 1))
+        (act): SiLU()
+        (agg): RecAttn2d(
+          (down): Sequential(
+            (0): Conv2d(96, 96, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2), groups=96)
+            (1): LinearAttention(
+              dim=96, num_heads=2
+              (qk): Conv2d(96, 192, kernel_size=(1, 1), stride=(1, 1), groups=2)
+              (elu): ELU(alpha=1.0)
+              (lepe): Conv2d(96, 96, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=96)
+              (rope): RoPE()
+            )
+            (2): Upsample(scale_factor=2.0, mode='nearest')
+          )
+          (conv): Conv2d(96, 96, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=96)
+        )
+        (cpe2): Conv2d(96, 96, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=96)
+        (norm2): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+        (mlp): Mlp(
+          (fc1): Linear(in_features=96, out_features=384, bias=True)
+          (act): GELU(approximate='none')
+          (fc2): Linear(in_features=384, out_features=96, bias=True)
+          (drop): Dropout(p=0.0, inplace=False)
+        )
+        (drop_path): DropPath(drop_prob=0.012)
+      )
+    )
+    (1): BasicLayer(
+      dim=96, input_resolution=(32, 32), level=0, depth=4
+      (blocks): ModuleList(
+        (0): MLLABlock(
+          dim=96, mlp_ratio=4.0, level=0, downsample=False
+          (cpe1): Conv2d(96, 96, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=96)
+          (norm1): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+          (i_proj): Linear(in_features=96, out_features=192, bias=True)
+          (o_proj): Conv2d(96, 96, kernel_size=(1, 1), stride=(1, 1))
+          (act): SiLU()
+          (agg): RecAttn2d(
+            (down): Sequential(
+              (0): Conv2d(96, 96, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2), groups=96)
+              (1): LinearAttention(
+                dim=96, num_heads=4
+                (qk): Conv2d(96, 192, kernel_size=(1, 1), stride=(1, 1), groups=2)
+                (elu): ELU(alpha=1.0)
+                (lepe): Conv2d(96, 96, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=96)
+                (rope): RoPE()
+              )
+              (2): Upsample(scale_factor=2.0, mode='nearest')
+            )
+            (conv): Conv2d(96, 96, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=96)
+          )
+          (cpe2): Conv2d(96, 96, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=96)
+          (norm2): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+          (mlp): Mlp(
+            (fc1): Linear(in_features=96, out_features=384, bias=True)
+            (act): GELU(approximate='none')
+            (fc2): Linear(in_features=384, out_features=96, bias=True)
+            (drop): Dropout(p=0.0, inplace=False)
+          )
+          (drop_path): DropPath(drop_prob=0.024)
+        )
+        (1): MLLABlock(
+          dim=96, mlp_ratio=4.0, level=0, downsample=False
+          (cpe1): Conv2d(96, 96, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=96)
+          (norm1): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+          (i_proj): Linear(in_features=96, out_features=192, bias=True)
+          (o_proj): Conv2d(96, 96, kernel_size=(1, 1), stride=(1, 1))
+          (act): SiLU()
+          (agg): RecAttn2d(
+            (down): Sequential(
+              (0): Conv2d(96, 96, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2), groups=96)
+              (1): LinearAttention(
+                dim=96, num_heads=4
+                (qk): Conv2d(96, 192, kernel_size=(1, 1), stride=(1, 1), groups=2)
+                (elu): ELU(alpha=1.0)
+                (lepe): Conv2d(96, 96, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=96)
+                (rope): RoPE()
+              )
+              (2): Upsample(scale_factor=2.0, mode='nearest')
+            )
+            (conv): Conv2d(96, 96, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=96)
+          )
+          (cpe2): Conv2d(96, 96, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=96)
+          (norm2): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+          (mlp): Mlp(
+            (fc1): Linear(in_features=96, out_features=384, bias=True)
+            (act): GELU(approximate='none')
+            (fc2): Linear(in_features=384, out_features=96, bias=True)
+            (drop): Dropout(p=0.0, inplace=False)
+          )
+          (drop_path): DropPath(drop_prob=0.035)
+        )
+        (2): MLLABlock(
+          dim=96, mlp_ratio=4.0, level=0, downsample=False
+          (cpe1): Conv2d(96, 96, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=96)
+          (norm1): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+          (i_proj): Linear(in_features=96, out_features=192, bias=True)
+          (o_proj): Conv2d(96, 96, kernel_size=(1, 1), stride=(1, 1))
+          (act): SiLU()
+          (agg): RecAttn2d(
+            (down): Sequential(
+              (0): Conv2d(96, 96, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2), groups=96)
+              (1): LinearAttention(
+                dim=96, num_heads=4
+                (qk): Conv2d(96, 192, kernel_size=(1, 1), stride=(1, 1), groups=2)
+                (elu): ELU(alpha=1.0)
+                (lepe): Conv2d(96, 96, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=96)
+                (rope): RoPE()
+              )
+              (2): Upsample(scale_factor=2.0, mode='nearest')
+            )
+            (conv): Conv2d(96, 96, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=96)
+          )
+          (cpe2): Conv2d(96, 96, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=96)
+          (norm2): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+          (mlp): Mlp(
+            (fc1): Linear(in_features=96, out_features=384, bias=True)
+            (act): GELU(approximate='none')
+            (fc2): Linear(in_features=384, out_features=96, bias=True)
+            (drop): Dropout(p=0.0, inplace=False)
+          )
+          (drop_path): DropPath(drop_prob=0.047)
+        )
+        (3): MLLABlock(
+          dim=96, mlp_ratio=4.0, level=0, downsample=False
+          (cpe1): Conv2d(96, 96, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=96)
+          (norm1): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+          (i_proj): Linear(in_features=96, out_features=192, bias=True)
+          (o_proj): Conv2d(96, 96, kernel_size=(1, 1), stride=(1, 1))
+          (act): SiLU()
+          (agg): RecAttn2d(
+            (down): Sequential(
+              (0): Conv2d(96, 96, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2), groups=96)
+              (1): LinearAttention(
+                dim=96, num_heads=4
+                (qk): Conv2d(96, 192, kernel_size=(1, 1), stride=(1, 1), groups=2)
+                (elu): ELU(alpha=1.0)
+                (lepe): Conv2d(96, 96, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=96)
+                (rope): RoPE()
+              )
+              (2): Upsample(scale_factor=2.0, mode='nearest')
+            )
+            (conv): Conv2d(96, 96, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=96)
+          )
+          (cpe2): Conv2d(96, 96, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=96)
+          (norm2): LayerNorm((96,), eps=1e-05, elementwise_affine=True)
+          (mlp): Mlp(
+            (fc1): Linear(in_features=96, out_features=384, bias=True)
+            (act): GELU(approximate='none')
+            (fc2): Linear(in_features=384, out_features=96, bias=True)
+            (drop): Dropout(p=0.0, inplace=False)
+          )
+          (drop_path): DropPath(drop_prob=0.059)
+        )
+      )
+      (downsample): MLLABlock(
+        dim=96, mlp_ratio=4.0, level=-1, downsample=True
+        (cpe1): Conv2d(96, 192, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2), groups=96)
+        (norm1): LayerNorm((192,), eps=1e-05, elementwise_affine=True)
+        (i_proj): Linear(in_features=192, out_features=384, bias=True)
+        (o_proj): Conv2d(192, 192, kernel_size=(1, 1), stride=(1, 1))
+        (act): SiLU()
+        (agg): RecAttn2d(
+          (down): Sequential(
+            (0): Conv2d(192, 192, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2), groups=192)
+            (1): LinearAttention(
+              dim=192, num_heads=4
+              (qk): Conv2d(192, 384, kernel_size=(1, 1), stride=(1, 1), groups=2)
+              (elu): ELU(alpha=1.0)
+              (lepe): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192)
+              (rope): RoPE()
+            )
+            (2): Upsample(scale_factor=2.0, mode='nearest')
+          )
+          (conv): Conv2d(192, 192, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=192)
+        )
+        (cpe2): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192)
+        (norm2): LayerNorm((192,), eps=1e-05, elementwise_affine=True)
+        (mlp): Mlp(
+          (fc1): Linear(in_features=192, out_features=768, bias=True)
+          (act): GELU(approximate='none')
+          (fc2): Linear(in_features=768, out_features=192, bias=True)
+          (drop): Dropout(p=0.0, inplace=False)
+        )
+        (drop_path): DropPath(drop_prob=0.059)
+      )
+    )
+    (2): BasicLayer(
+      dim=192, input_resolution=(16, 16), level=-1, depth=8
+      (blocks): ModuleList(
+        (0): MLLABlock(
+          dim=192, mlp_ratio=4.0, level=-1, downsample=False
+          (cpe1): Conv2d(192, 192, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=192)
+          (norm1): LayerNorm((192,), eps=1e-05, elementwise_affine=True)
+          (i_proj): Linear(in_features=192, out_features=384, bias=True)
+          (o_proj): Conv2d(192, 192, kernel_size=(1, 1), stride=(1, 1))
+          (act): SiLU()
+          (agg): RecAttn2d(
+            (down): Sequential(
+              (0): Conv2d(192, 192, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2), groups=192)
+              (1): LinearAttention(
+                dim=192, num_heads=8
+                (qk): Conv2d(192, 384, kernel_size=(1, 1), stride=(1, 1), groups=2)
+                (elu): ELU(alpha=1.0)
+                (lepe): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192)
+                (rope): RoPE()
+              )
+              (2): Upsample(scale_factor=2.0, mode='nearest')
+            )
+            (conv): Conv2d(192, 192, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=192)
+          )
+          (cpe2): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192)
+          (norm2): LayerNorm((192,), eps=1e-05, elementwise_affine=True)
+          (mlp): Mlp(
+            (fc1): Linear(in_features=192, out_features=768, bias=True)
+            (act): GELU(approximate='none')
+            (fc2): Linear(in_features=768, out_features=192, bias=True)
+            (drop): Dropout(p=0.0, inplace=False)
+          )
+          (drop_path): DropPath(drop_prob=0.071)
+        )
+        (1): MLLABlock(
+          dim=192, mlp_ratio=4.0, level=-1, downsample=False
+          (cpe1): Conv2d(192, 192, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=192)
+          (norm1): LayerNorm((192,), eps=1e-05, elementwise_affine=True)
+          (i_proj): Linear(in_features=192, out_features=384, bias=True)
+          (o_proj): Conv2d(192, 192, kernel_size=(1, 1), stride=(1, 1))
+          (act): SiLU()
+          (agg): RecAttn2d(
+            (down): Sequential(
+              (0): Conv2d(192, 192, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2), groups=192)
+              (1): LinearAttention(
+                dim=192, num_heads=8
+                (qk): Conv2d(192, 384, kernel_size=(1, 1), stride=(1, 1), groups=2)
+                (elu): ELU(alpha=1.0)
+                (lepe): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192)
+                (rope): RoPE()
+              )
+              (2): Upsample(scale_factor=2.0, mode='nearest')
+            )
+            (conv): Conv2d(192, 192, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=192)
+          )
+          (cpe2): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192)
+          (norm2): LayerNorm((192,), eps=1e-05, elementwise_affine=True)
+          (mlp): Mlp(
+            (fc1): Linear(in_features=192, out_features=768, bias=True)
+            (act): GELU(approximate='none')
+            (fc2): Linear(in_features=768, out_features=192, bias=True)
+            (drop): Dropout(p=0.0, inplace=False)
+          )
+          (drop_path): DropPath(drop_prob=0.082)
+        )
+        (2): MLLABlock(
+          dim=192, mlp_ratio=4.0, level=-1, downsample=False
+          (cpe1): Conv2d(192, 192, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=192)
+          (norm1): LayerNorm((192,), eps=1e-05, elementwise_affine=True)
+          (i_proj): Linear(in_features=192, out_features=384, bias=True)
+          (o_proj): Conv2d(192, 192, kernel_size=(1, 1), stride=(1, 1))
+          (act): SiLU()
+          (agg): RecAttn2d(
+            (down): Sequential(
+              (0): Conv2d(192, 192, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2), groups=192)
+              (1): LinearAttention(
+                dim=192, num_heads=8
+                (qk): Conv2d(192, 384, kernel_size=(1, 1), stride=(1, 1), groups=2)
+                (elu): ELU(alpha=1.0)
+                (lepe): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192)
+                (rope): RoPE()
+              )
+              (2): Upsample(scale_factor=2.0, mode='nearest')
+            )
+            (conv): Conv2d(192, 192, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=192)
+          )
+          (cpe2): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192)
+          (norm2): LayerNorm((192,), eps=1e-05, elementwise_affine=True)
+          (mlp): Mlp(
+            (fc1): Linear(in_features=192, out_features=768, bias=True)
+            (act): GELU(approximate='none')
+            (fc2): Linear(in_features=768, out_features=192, bias=True)
+            (drop): Dropout(p=0.0, inplace=False)
+          )
+          (drop_path): DropPath(drop_prob=0.094)
+        )
+        (3): MLLABlock(
+          dim=192, mlp_ratio=4.0, level=-1, downsample=False
+          (cpe1): Conv2d(192, 192, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=192)
+          (norm1): LayerNorm((192,), eps=1e-05, elementwise_affine=True)
+          (i_proj): Linear(in_features=192, out_features=384, bias=True)
+          (o_proj): Conv2d(192, 192, kernel_size=(1, 1), stride=(1, 1))
+          (act): SiLU()
+          (agg): RecAttn2d(
+            (down): Sequential(
+              (0): Conv2d(192, 192, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2), groups=192)
+              (1): LinearAttention(
+                dim=192, num_heads=8
+                (qk): Conv2d(192, 384, kernel_size=(1, 1), stride=(1, 1), groups=2)
+                (elu): ELU(alpha=1.0)
+                (lepe): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192)
+                (rope): RoPE()
+              )
+              (2): Upsample(scale_factor=2.0, mode='nearest')
+            )
+            (conv): Conv2d(192, 192, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=192)
+          )
+          (cpe2): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192)
+          (norm2): LayerNorm((192,), eps=1e-05, elementwise_affine=True)
+          (mlp): Mlp(
+            (fc1): Linear(in_features=192, out_features=768, bias=True)
+            (act): GELU(approximate='none')
+            (fc2): Linear(in_features=768, out_features=192, bias=True)
+            (drop): Dropout(p=0.0, inplace=False)
+          )
+          (drop_path): DropPath(drop_prob=0.106)
+        )
+        (4): MLLABlock(
+          dim=192, mlp_ratio=4.0, level=-1, downsample=False
+          (cpe1): Conv2d(192, 192, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=192)
+          (norm1): LayerNorm((192,), eps=1e-05, elementwise_affine=True)
+          (i_proj): Linear(in_features=192, out_features=384, bias=True)
+          (o_proj): Conv2d(192, 192, kernel_size=(1, 1), stride=(1, 1))
+          (act): SiLU()
+          (agg): RecAttn2d(
+            (down): Sequential(
+              (0): Conv2d(192, 192, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2), groups=192)
+              (1): LinearAttention(
+                dim=192, num_heads=8
+                (qk): Conv2d(192, 384, kernel_size=(1, 1), stride=(1, 1), groups=2)
+                (elu): ELU(alpha=1.0)
+                (lepe): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192)
+                (rope): RoPE()
+              )
+              (2): Upsample(scale_factor=2.0, mode='nearest')
+            )
+            (conv): Conv2d(192, 192, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=192)
+          )
+          (cpe2): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192)
+          (norm2): LayerNorm((192,), eps=1e-05, elementwise_affine=True)
+          (mlp): Mlp(
+            (fc1): Linear(in_features=192, out_features=768, bias=True)
+            (act): GELU(approximate='none')
+            (fc2): Linear(in_features=768, out_features=192, bias=True)
+            (drop): Dropout(p=0.0, inplace=False)
+          )
+          (drop_path): DropPath(drop_prob=0.118)
+        )
+        (5): MLLABlock(
+          dim=192, mlp_ratio=4.0, level=-1, downsample=False
+          (cpe1): Conv2d(192, 192, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=192)
+          (norm1): LayerNorm((192,), eps=1e-05, elementwise_affine=True)
+          (i_proj): Linear(in_features=192, out_features=384, bias=True)
+          (o_proj): Conv2d(192, 192, kernel_size=(1, 1), stride=(1, 1))
+          (act): SiLU()
+          (agg): RecAttn2d(
+            (down): Sequential(
+              (0): Conv2d(192, 192, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2), groups=192)
+              (1): LinearAttention(
+                dim=192, num_heads=8
+                (qk): Conv2d(192, 384, kernel_size=(1, 1), stride=(1, 1), groups=2)
+                (elu): ELU(alpha=1.0)
+                (lepe): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192)
+                (rope): RoPE()
+              )
+              (2): Upsample(scale_factor=2.0, mode='nearest')
+            )
+            (conv): Conv2d(192, 192, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=192)
+          )
+          (cpe2): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192)
+          (norm2): LayerNorm((192,), eps=1e-05, elementwise_affine=True)
+          (mlp): Mlp(
+            (fc1): Linear(in_features=192, out_features=768, bias=True)
+            (act): GELU(approximate='none')
+            (fc2): Linear(in_features=768, out_features=192, bias=True)
+            (drop): Dropout(p=0.0, inplace=False)
+          )
+          (drop_path): DropPath(drop_prob=0.129)
+        )
+        (6): MLLABlock(
+          dim=192, mlp_ratio=4.0, level=-1, downsample=False
+          (cpe1): Conv2d(192, 192, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=192)
+          (norm1): LayerNorm((192,), eps=1e-05, elementwise_affine=True)
+          (i_proj): Linear(in_features=192, out_features=384, bias=True)
+          (o_proj): Conv2d(192, 192, kernel_size=(1, 1), stride=(1, 1))
+          (act): SiLU()
+          (agg): RecAttn2d(
+            (down): Sequential(
+              (0): Conv2d(192, 192, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2), groups=192)
+              (1): LinearAttention(
+                dim=192, num_heads=8
+                (qk): Conv2d(192, 384, kernel_size=(1, 1), stride=(1, 1), groups=2)
+                (elu): ELU(alpha=1.0)
+                (lepe): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192)
+                (rope): RoPE()
+              )
+              (2): Upsample(scale_factor=2.0, mode='nearest')
+            )
+            (conv): Conv2d(192, 192, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=192)
+          )
+          (cpe2): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192)
+          (norm2): LayerNorm((192,), eps=1e-05, elementwise_affine=True)
+          (mlp): Mlp(
+            (fc1): Linear(in_features=192, out_features=768, bias=True)
+            (act): GELU(approximate='none')
+            (fc2): Linear(in_features=768, out_features=192, bias=True)
+            (drop): Dropout(p=0.0, inplace=False)
+          )
+          (drop_path): DropPath(drop_prob=0.141)
+        )
+        (7): MLLABlock(
+          dim=192, mlp_ratio=4.0, level=-1, downsample=False
+          (cpe1): Conv2d(192, 192, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=192)
+          (norm1): LayerNorm((192,), eps=1e-05, elementwise_affine=True)
+          (i_proj): Linear(in_features=192, out_features=384, bias=True)
+          (o_proj): Conv2d(192, 192, kernel_size=(1, 1), stride=(1, 1))
+          (act): SiLU()
+          (agg): RecAttn2d(
+            (down): Sequential(
+              (0): Conv2d(192, 192, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2), groups=192)
+              (1): LinearAttention(
+                dim=192, num_heads=8
+                (qk): Conv2d(192, 384, kernel_size=(1, 1), stride=(1, 1), groups=2)
+                (elu): ELU(alpha=1.0)
+                (lepe): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192)
+                (rope): RoPE()
+              )
+              (2): Upsample(scale_factor=2.0, mode='nearest')
+            )
+            (conv): Conv2d(192, 192, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=192)
+          )
+          (cpe2): Conv2d(192, 192, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=192)
+          (norm2): LayerNorm((192,), eps=1e-05, elementwise_affine=True)
+          (mlp): Mlp(
+            (fc1): Linear(in_features=192, out_features=768, bias=True)
+            (act): GELU(approximate='none')
+            (fc2): Linear(in_features=768, out_features=192, bias=True)
+            (drop): Dropout(p=0.0, inplace=False)
+          )
+          (drop_path): DropPath(drop_prob=0.153)
+        )
+      )
+      (downsample): MLLABlock(
+        dim=192, mlp_ratio=4.0, level=-2, downsample=True
+        (cpe1): Conv2d(192, 384, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2), groups=192)
+        (norm1): LayerNorm((384,), eps=1e-05, elementwise_affine=True)
+        (i_proj): Linear(in_features=384, out_features=768, bias=True)
+        (o_proj): Conv2d(384, 384, kernel_size=(1, 1), stride=(1, 1))
+        (act): SiLU()
+        (agg): RecAttn2d(
+          (down): Sequential(
+            (0): Conv2d(384, 384, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2), groups=384)
+            (1): LinearAttention(
+              dim=384, num_heads=8
+              (qk): Conv2d(384, 768, kernel_size=(1, 1), stride=(1, 1), groups=2)
+              (elu): ELU(alpha=1.0)
+              (lepe): Conv2d(384, 384, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=384)
+              (rope): RoPE()
+            )
+            (2): Upsample(scale_factor=2.0, mode='nearest')
+          )
+          (conv): Conv2d(384, 384, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=384)
+        )
+        (cpe2): Conv2d(384, 384, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=384)
+        (norm2): LayerNorm((384,), eps=1e-05, elementwise_affine=True)
+        (mlp): Mlp(
+          (fc1): Linear(in_features=384, out_features=1536, bias=True)
+          (act): GELU(approximate='none')
+          (fc2): Linear(in_features=1536, out_features=384, bias=True)
+          (drop): Dropout(p=0.0, inplace=False)
+        )
+        (drop_path): DropPath(drop_prob=0.153)
+      )
+    )
+    (3): BasicLayer(
+      dim=384, input_resolution=(8, 8), level=-2, depth=4
+      (blocks): ModuleList(
+        (0): MLLABlock(
+          dim=384, mlp_ratio=4.0, level=-2, downsample=False
+          (cpe1): Conv2d(384, 384, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=384)
+          (norm1): LayerNorm((384,), eps=1e-05, elementwise_affine=True)
+          (i_proj): Linear(in_features=384, out_features=768, bias=True)
+          (o_proj): Conv2d(384, 384, kernel_size=(1, 1), stride=(1, 1))
+          (act): SiLU()
+          (agg): RecAttn2d(
+            (down): Sequential(
+              (0): Conv2d(384, 384, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2), groups=384)
+              (1): LinearAttention(
+                dim=384, num_heads=16
+                (qk): Conv2d(384, 768, kernel_size=(1, 1), stride=(1, 1), groups=2)
+                (elu): ELU(alpha=1.0)
+                (lepe): Conv2d(384, 384, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=384)
+                (rope): RoPE()
+              )
+              (2): Upsample(scale_factor=2.0, mode='nearest')
+            )
+            (conv): Conv2d(384, 384, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=384)
+          )
+          (cpe2): Conv2d(384, 384, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=384)
+          (norm2): LayerNorm((384,), eps=1e-05, elementwise_affine=True)
+          (mlp): Mlp(
+            (fc1): Linear(in_features=384, out_features=1536, bias=True)
+            (act): GELU(approximate='none')
+            (fc2): Linear(in_features=1536, out_features=384, bias=True)
+            (drop): Dropout(p=0.0, inplace=False)
+          )
+          (drop_path): DropPath(drop_prob=0.165)
+        )
+        (1): MLLABlock(
+          dim=384, mlp_ratio=4.0, level=-2, downsample=False
+          (cpe1): Conv2d(384, 384, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=384)
+          (norm1): LayerNorm((384,), eps=1e-05, elementwise_affine=True)
+          (i_proj): Linear(in_features=384, out_features=768, bias=True)
+          (o_proj): Conv2d(384, 384, kernel_size=(1, 1), stride=(1, 1))
+          (act): SiLU()
+          (agg): RecAttn2d(
+            (down): Sequential(
+              (0): Conv2d(384, 384, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2), groups=384)
+              (1): LinearAttention(
+                dim=384, num_heads=16
+                (qk): Conv2d(384, 768, kernel_size=(1, 1), stride=(1, 1), groups=2)
+                (elu): ELU(alpha=1.0)
+                (lepe): Conv2d(384, 384, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=384)
+                (rope): RoPE()
+              )
+              (2): Upsample(scale_factor=2.0, mode='nearest')
+            )
+            (conv): Conv2d(384, 384, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=384)
+          )
+          (cpe2): Conv2d(384, 384, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=384)
+          (norm2): LayerNorm((384,), eps=1e-05, elementwise_affine=True)
+          (mlp): Mlp(
+            (fc1): Linear(in_features=384, out_features=1536, bias=True)
+            (act): GELU(approximate='none')
+            (fc2): Linear(in_features=1536, out_features=384, bias=True)
+            (drop): Dropout(p=0.0, inplace=False)
+          )
+          (drop_path): DropPath(drop_prob=0.176)
+        )
+        (2): MLLABlock(
+          dim=384, mlp_ratio=4.0, level=-2, downsample=False
+          (cpe1): Conv2d(384, 384, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=384)
+          (norm1): LayerNorm((384,), eps=1e-05, elementwise_affine=True)
+          (i_proj): Linear(in_features=384, out_features=768, bias=True)
+          (o_proj): Conv2d(384, 384, kernel_size=(1, 1), stride=(1, 1))
+          (act): SiLU()
+          (agg): RecAttn2d(
+            (down): Sequential(
+              (0): Conv2d(384, 384, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2), groups=384)
+              (1): LinearAttention(
+                dim=384, num_heads=16
+                (qk): Conv2d(384, 768, kernel_size=(1, 1), stride=(1, 1), groups=2)
+                (elu): ELU(alpha=1.0)
+                (lepe): Conv2d(384, 384, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=384)
+                (rope): RoPE()
+              )
+              (2): Upsample(scale_factor=2.0, mode='nearest')
+            )
+            (conv): Conv2d(384, 384, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=384)
+          )
+          (cpe2): Conv2d(384, 384, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=384)
+          (norm2): LayerNorm((384,), eps=1e-05, elementwise_affine=True)
+          (mlp): Mlp(
+            (fc1): Linear(in_features=384, out_features=1536, bias=True)
+            (act): GELU(approximate='none')
+            (fc2): Linear(in_features=1536, out_features=384, bias=True)
+            (drop): Dropout(p=0.0, inplace=False)
+          )
+          (drop_path): DropPath(drop_prob=0.188)
+        )
+        (3): MLLABlock(
+          dim=384, mlp_ratio=4.0, level=-2, downsample=False
+          (cpe1): Conv2d(384, 384, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=384)
+          (norm1): LayerNorm((384,), eps=1e-05, elementwise_affine=True)
+          (i_proj): Linear(in_features=384, out_features=768, bias=True)
+          (o_proj): Conv2d(384, 384, kernel_size=(1, 1), stride=(1, 1))
+          (act): SiLU()
+          (agg): RecAttn2d(
+            (down): Sequential(
+              (0): Conv2d(384, 384, kernel_size=(5, 5), stride=(2, 2), padding=(2, 2), groups=384)
+              (1): LinearAttention(
+                dim=384, num_heads=16
+                (qk): Conv2d(384, 768, kernel_size=(1, 1), stride=(1, 1), groups=2)
+                (elu): ELU(alpha=1.0)
+                (lepe): Conv2d(384, 384, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=384)
+                (rope): RoPE()
+              )
+              (2): Upsample(scale_factor=2.0, mode='nearest')
+            )
+            (conv): Conv2d(384, 384, kernel_size=(5, 5), stride=(1, 1), padding=(2, 2), groups=384)
+          )
+          (cpe2): Conv2d(384, 384, kernel_size=(3, 3), stride=(1, 1), padding=(1, 1), groups=384)
+          (norm2): LayerNorm((384,), eps=1e-05, elementwise_affine=True)
+          (mlp): Mlp(
+            (fc1): Linear(in_features=384, out_features=1536, bias=True)
+            (act): GELU(approximate='none')
+            (fc2): Linear(in_features=1536, out_features=384, bias=True)
+            (drop): Dropout(p=0.0, inplace=False)
+          )
+          (drop_path): DropPath(drop_prob=0.200)
+        )
+      )
+      (downsample): Identity()
+    )
+  )
+  (norm): LayerNorm((384,), eps=1e-05, elementwise_affine=True)
+  (head): Linear(in_features=384, out_features=1000, bias=True)
+)
+
+EPOCH 1
+ * Acc@1 0.410 Acc@5 1.710
+Accuracy of the network on the 50000 test images: 0.4%
+ * Acc@1 0.096 Acc@5 0.500
+Accuracy of the ema network on the 50000 test images: 0.1%
+--
+EPOCH 2
+ * Acc@1 3.078 Acc@5 10.334
+Accuracy of the network on the 50000 test images: 3.1%
+ * Acc@1 0.104 Acc@5 0.498
+Accuracy of the ema network on the 50000 test images: 0.1%
+--
+EPOCH 3
+ * Acc@1 9.666 Acc@5 24.274
+Accuracy of the network on the 50000 test images: 9.7%
+ * Acc@1 0.104 Acc@5 0.532
+Accuracy of the ema network on the 50000 test images: 0.1%
+--
+EPOCH 4
+ * Acc@1 17.750 Acc@5 38.622
+Accuracy of the network on the 50000 test images: 17.8%
+ * Acc@1 0.100 Acc@5 0.528
+Accuracy of the ema network on the 50000 test images: 0.1%
+--
+EPOCH 5
+ * Acc@1 25.326 Acc@5 49.532
+Accuracy of the network on the 50000 test images: 25.3%
+ * Acc@1 0.168 Acc@5 0.534
+Accuracy of the ema network on the 50000 test images: 0.2%
+--
+EPOCH 6
+ * Acc@1 32.012 Acc@5 57.658
+Accuracy of the network on the 50000 test images: 32.0%
+ * Acc@1 0.130 Acc@5 0.506
+Accuracy of the ema network on the 50000 test images: 0.1%
+--
+EPOCH 7
+ * Acc@1 37.956 Acc@5 63.940
+Accuracy of the network on the 50000 test images: 38.0%
+ * Acc@1 0.156 Acc@5 0.632
+Accuracy of the ema network on the 50000 test images: 0.2%
+--
+EPOCH 8
+ * Acc@1 42.672 Acc@5 68.370
+Accuracy of the network on the 50000 test images: 42.7%
+ * Acc@1 0.128 Acc@5 0.844
+Accuracy of the ema network on the 50000 test images: 0.1%
+--
+EPOCH 9
+ * Acc@1 47.372 Acc@5 73.086
+Accuracy of the network on the 50000 test images: 47.4%
+ * Acc@1 0.116 Acc@5 0.778
+Accuracy of the ema network on the 50000 test images: 0.1%
+--
+EPOCH 10
+ * Acc@1 50.682 Acc@5 76.008
+Accuracy of the network on the 50000 test images: 50.7%
+ * Acc@1 0.184 Acc@5 0.852
+Accuracy of the ema network on the 50000 test images: 0.2%
+--
+EPOCH 11
+ * Acc@1 53.294 Acc@5 78.210
+Accuracy of the network on the 50000 test images: 53.3%
+ * Acc@1 0.272 Acc@5 1.036
+Accuracy of the ema network on the 50000 test images: 0.3%
+--
+EPOCH 12
+ * Acc@1 54.876 Acc@5 79.648
+Accuracy of the network on the 50000 test images: 54.9%
+ * Acc@1 0.302 Acc@5 1.222
+Accuracy of the ema network on the 50000 test images: 0.3%
+--
+EPOCH 13
+ * Acc@1 57.552 Acc@5 81.576
+Accuracy of the network on the 50000 test images: 57.6%
+ * Acc@1 0.360 Acc@5 1.774
+Accuracy of the ema network on the 50000 test images: 0.4%
+--
+EPOCH 14
+ * Acc@1 58.476 Acc@5 82.446
+Accuracy of the network on the 50000 test images: 58.5%
+ * Acc@1 0.536 Acc@5 2.908
+Accuracy of the ema network on the 50000 test images: 0.5%
+--
+EPOCH 15
+ * Acc@1 60.316 Acc@5 83.790
+Accuracy of the network on the 50000 test images: 60.3%
+ * Acc@1 1.038 Acc@5 4.864
+Accuracy of the ema network on the 50000 test images: 1.0%
+--
+EPOCH 16
+ * Acc@1 61.392 Acc@5 84.538
+Accuracy of the network on the 50000 test images: 61.4%
+ * Acc@1 2.200 Acc@5 8.016
+Accuracy of the ema network on the 50000 test images: 2.2%
+--
+EPOCH 17
+ * Acc@1 62.260 Acc@5 85.112
+Accuracy of the network on the 50000 test images: 62.3%
+ * Acc@1 4.198 Acc@5 12.704
+Accuracy of the ema network on the 50000 test images: 4.2%
+--
+EPOCH 18
+ * Acc@1 63.284 Acc@5 85.830
+Accuracy of the network on the 50000 test images: 63.3%
+ * Acc@1 7.234 Acc@5 19.414
+Accuracy of the ema network on the 50000 test images: 7.2%
+--
+EPOCH 19
+ * Acc@1 63.594 Acc@5 86.036
+Accuracy of the network on the 50000 test images: 63.6%
+ * Acc@1 11.174 Acc@5 27.254
+Accuracy of the ema network on the 50000 test images: 11.2%
+--
+EPOCH 20
+ * Acc@1 64.862 Acc@5 86.798
+Accuracy of the network on the 50000 test images: 64.9%
+ * Acc@1 16.126 Acc@5 35.440
+Accuracy of the ema network on the 50000 test images: 16.1%
+--
+EPOCH 21
+ * Acc@1 64.840 Acc@5 87.056
+Accuracy of the network on the 50000 test images: 64.8%
+ * Acc@1 21.788 Acc@5 43.736
+Accuracy of the ema network on the 50000 test images: 21.8%
+--
+EPOCH 22
+ * Acc@1 66.044 Acc@5 87.690
+Accuracy of the network on the 50000 test images: 66.0%
+ * Acc@1 27.620 Acc@5 51.316
+Accuracy of the ema network on the 50000 test images: 27.6%
+--
+EPOCH 23
+ * Acc@1 66.860 Acc@5 88.170
+Accuracy of the network on the 50000 test images: 66.9%
+ * Acc@1 33.338 Acc@5 58.136
+Accuracy of the ema network on the 50000 test images: 33.3%
+--
+EPOCH 24
+ * Acc@1 67.806 Acc@5 88.666
+Accuracy of the network on the 50000 test images: 67.8%
+ * Acc@1 38.686 Acc@5 64.296
+Accuracy of the ema network on the 50000 test images: 38.7%
+--
+EPOCH 25
+ * Acc@1 68.098 Acc@5 88.830
+Accuracy of the network on the 50000 test images: 68.1%
+ * Acc@1 43.584 Acc@5 69.082
+Accuracy of the ema network on the 50000 test images: 43.6%
+--
+EPOCH 26
+ * Acc@1 67.970 Acc@5 88.816
+Accuracy of the network on the 50000 test images: 68.0%
+ * Acc@1 48.102 Acc@5 73.278
+Accuracy of the ema network on the 50000 test images: 48.1%
+--
+EPOCH 27
+ * Acc@1 69.038 Acc@5 89.332
+Accuracy of the network on the 50000 test images: 69.0%
+ * Acc@1 51.928 Acc@5 76.808
+Accuracy of the ema network on the 50000 test images: 51.9%
+--
+EPOCH 28
+ * Acc@1 69.384 Acc@5 89.524
+Accuracy of the network on the 50000 test images: 69.4%
+ * Acc@1 55.344 Acc@5 79.726
+Accuracy of the ema network on the 50000 test images: 55.3%
+--
+EPOCH 29
+ * Acc@1 69.308 Acc@5 89.718
+Accuracy of the network on the 50000 test images: 69.3%
+ * Acc@1 58.526 Acc@5 82.092
+Accuracy of the ema network on the 50000 test images: 58.5%
+--
+EPOCH 30
+ * Acc@1 69.322 Acc@5 89.614
+Accuracy of the network on the 50000 test images: 69.3%
+ * Acc@1 60.962 Acc@5 83.964
+Accuracy of the ema network on the 50000 test images: 61.0%
+--
+EPOCH 31
+ * Acc@1 69.866 Acc@5 90.072
+Accuracy of the network on the 50000 test images: 69.9%
+ * Acc@1 63.092 Acc@5 85.478
+Accuracy of the ema network on the 50000 test images: 63.1%
+--
+EPOCH 32
+ * Acc@1 70.216 Acc@5 90.290
+Accuracy of the network on the 50000 test images: 70.2%
+ * Acc@1 64.906 Acc@5 86.716
+Accuracy of the ema network on the 50000 test images: 64.9%
+--
+EPOCH 33
+ * Acc@1 70.640 Acc@5 90.654
+Accuracy of the network on the 50000 test images: 70.6%
+ * Acc@1 66.396 Acc@5 87.638
+Accuracy of the ema network on the 50000 test images: 66.4%
+--
+EPOCH 34
+ * Acc@1 70.918 Acc@5 90.604
+Accuracy of the network on the 50000 test images: 70.9%
+ * Acc@1 67.604 Acc@5 88.452
+Accuracy of the ema network on the 50000 test images: 67.6%
+--
+EPOCH 35
+ * Acc@1 71.026 Acc@5 90.520
+Accuracy of the network on the 50000 test images: 71.0%
+ * Acc@1 68.776 Acc@5 89.172
+Accuracy of the ema network on the 50000 test images: 68.8%
+--
+EPOCH 36
+ * Acc@1 71.236 Acc@5 90.772
+Accuracy of the network on the 50000 test images: 71.2%
+ * Acc@1 69.730 Acc@5 89.726
+Accuracy of the ema network on the 50000 test images: 69.7%
+--
+EPOCH 37
+ * Acc@1 71.746 Acc@5 91.068
+Accuracy of the network on the 50000 test images: 71.7%
+ * Acc@1 70.526 Acc@5 90.134
+Accuracy of the ema network on the 50000 test images: 70.5%
+--
+EPOCH 38
+ * Acc@1 71.468 Acc@5 90.820
+Accuracy of the network on the 50000 test images: 71.5%
+ * Acc@1 71.134 Acc@5 90.512
+Accuracy of the ema network on the 50000 test images: 71.1%
+--
+EPOCH 39
+ * Acc@1 72.124 Acc@5 91.276
+Accuracy of the network on the 50000 test images: 72.1%
+ * Acc@1 71.702 Acc@5 90.822
+Accuracy of the ema network on the 50000 test images: 71.7%
+--
+EPOCH 40
+ * Acc@1 72.100 Acc@5 91.270
+Accuracy of the network on the 50000 test images: 72.1%
+ * Acc@1 72.170 Acc@5 91.138
+Accuracy of the ema network on the 50000 test images: 72.2%
+--
+EPOCH 41
+ * Acc@1 72.336 Acc@5 91.378
+Accuracy of the network on the 50000 test images: 72.3%
+ * Acc@1 72.596 Acc@5 91.390
+Accuracy of the ema network on the 50000 test images: 72.6%
+--
+EPOCH 42
+ * Acc@1 72.810 Acc@5 91.564
+Accuracy of the network on the 50000 test images: 72.8%
+ * Acc@1 73.044 Acc@5 91.594
+Accuracy of the ema network on the 50000 test images: 73.0%
+--
+EPOCH 43
+ * Acc@1 72.384 Acc@5 91.542
+Accuracy of the network on the 50000 test images: 72.4%
+ * Acc@1 73.430 Acc@5 91.808
+Accuracy of the ema network on the 50000 test images: 73.4%
+--
+EPOCH 44
+ * Acc@1 72.290 Acc@5 91.340
+Accuracy of the network on the 50000 test images: 72.3%
+ * Acc@1 73.808 Acc@5 91.970
+Accuracy of the ema network on the 50000 test images: 73.8%
+--
+EPOCH 45
+ * Acc@1 72.950 Acc@5 91.642
+Accuracy of the network on the 50000 test images: 72.9%
+ * Acc@1 74.136 Acc@5 92.126
+Accuracy of the ema network on the 50000 test images: 74.1%
+--
+EPOCH 46
+ * Acc@1 72.780 Acc@5 91.698
+Accuracy of the network on the 50000 test images: 72.8%
+ * Acc@1 74.422 Acc@5 92.308
+Accuracy of the ema network on the 50000 test images: 74.4%
+--
+EPOCH 47
+ * Acc@1 73.136 Acc@5 91.874
+Accuracy of the network on the 50000 test images: 73.1%
+ * Acc@1 74.700 Acc@5 92.436
+Accuracy of the ema network on the 50000 test images: 74.7%
+--
+EPOCH 48
+ * Acc@1 73.128 Acc@5 91.778
+Accuracy of the network on the 50000 test images: 73.1%
+ * Acc@1 74.874 Acc@5 92.542
+Accuracy of the ema network on the 50000 test images: 74.9%
+--
+EPOCH 49
+ * Acc@1 73.450 Acc@5 91.854
+Accuracy of the network on the 50000 test images: 73.4%
+ * Acc@1 75.102 Acc@5 92.634
+Accuracy of the ema network on the 50000 test images: 75.1%
+--
+EPOCH 50
+ * Acc@1 73.164 Acc@5 91.744
+Accuracy of the network on the 50000 test images: 73.2%
+ * Acc@1 75.242 Acc@5 92.766
+Accuracy of the ema network on the 50000 test images: 75.2%
+--
+EPOCH 51
+ * Acc@1 73.340 Acc@5 92.026
+Accuracy of the network on the 50000 test images: 73.3%
+ * Acc@1 75.366 Acc@5 92.852
+Accuracy of the ema network on the 50000 test images: 75.4%
+--
+EPOCH 52
+ * Acc@1 73.204 Acc@5 92.034
+Accuracy of the network on the 50000 test images: 73.2%
+ * Acc@1 75.562 Acc@5 92.944
+Accuracy of the ema network on the 50000 test images: 75.6%
+--
+EPOCH 53
+ * Acc@1 73.512 Acc@5 92.022
+Accuracy of the network on the 50000 test images: 73.5%
+ * Acc@1 75.716 Acc@5 93.014
+Accuracy of the ema network on the 50000 test images: 75.7%
+--
+EPOCH 54
+ * Acc@1 73.588 Acc@5 91.974
+Accuracy of the network on the 50000 test images: 73.6%
+ * Acc@1 75.810 Acc@5 93.082
+Accuracy of the ema network on the 50000 test images: 75.8%
+--
+EPOCH 55
+ * Acc@1 73.524 Acc@5 92.038
+Accuracy of the network on the 50000 test images: 73.5%
+ * Acc@1 75.962 Acc@5 93.150
+Accuracy of the ema network on the 50000 test images: 76.0%
+--
+EPOCH 56
+ * Acc@1 73.518 Acc@5 92.166
+Accuracy of the network on the 50000 test images: 73.5%
+ * Acc@1 76.068 Acc@5 93.202
+Accuracy of the ema network on the 50000 test images: 76.1%
+--
+EPOCH 57
+ * Acc@1 73.776 Acc@5 92.346
+Accuracy of the network on the 50000 test images: 73.8%
+ * Acc@1 76.178 Acc@5 93.272
+Accuracy of the ema network on the 50000 test images: 76.2%
+--
+EPOCH 58
+ * Acc@1 73.926 Acc@5 92.326
+Accuracy of the network on the 50000 test images: 73.9%
+ * Acc@1 76.282 Acc@5 93.326
+Accuracy of the ema network on the 50000 test images: 76.3%
+--
+EPOCH 59
+ * Acc@1 73.972 Acc@5 92.350
+Accuracy of the network on the 50000 test images: 74.0%
+ * Acc@1 76.402 Acc@5 93.394
+Accuracy of the ema network on the 50000 test images: 76.4%
+--
+EPOCH 60
+ * Acc@1 74.034 Acc@5 92.134
+Accuracy of the network on the 50000 test images: 74.0%
+ * Acc@1 76.504 Acc@5 93.448
+Accuracy of the ema network on the 50000 test images: 76.5%
+--
+EPOCH 61
+ * Acc@1 74.572 Acc@5 92.492
+Accuracy of the network on the 50000 test images: 74.6%
+ * Acc@1 76.596 Acc@5 93.482
+Accuracy of the ema network on the 50000 test images: 76.6%
+--
+EPOCH 62
+ * Acc@1 73.922 Acc@5 92.470
+Accuracy of the network on the 50000 test images: 73.9%
+ * Acc@1 76.712 Acc@5 93.536
+Accuracy of the ema network on the 50000 test images: 76.7%
+--
+EPOCH 63
+ * Acc@1 74.180 Acc@5 92.466
+Accuracy of the network on the 50000 test images: 74.2%
+ * Acc@1 76.818 Acc@5 93.572
+Accuracy of the ema network on the 50000 test images: 76.8%
+--
+EPOCH 64
+ * Acc@1 74.574 Acc@5 92.502
+Accuracy of the network on the 50000 test images: 74.6%
+ * Acc@1 76.870 Acc@5 93.638
+Accuracy of the ema network on the 50000 test images: 76.9%
+--
+EPOCH 65
+ * Acc@1 74.038 Acc@5 92.292
+Accuracy of the network on the 50000 test images: 74.0%
+ * Acc@1 76.934 Acc@5 93.658
+Accuracy of the ema network on the 50000 test images: 76.9%
+--
+EPOCH 66
+ * Acc@1 74.114 Acc@5 92.612
+Accuracy of the network on the 50000 test images: 74.1%
+ * Acc@1 76.910 Acc@5 93.714
+Accuracy of the ema network on the 50000 test images: 76.9%
+--
+EPOCH 67
+ * Acc@1 74.504 Acc@5 92.490
+Accuracy of the network on the 50000 test images: 74.5%
+ * Acc@1 76.984 Acc@5 93.780
+Accuracy of the ema network on the 50000 test images: 77.0%
+--
+EPOCH 68
+ * Acc@1 74.620 Acc@5 92.706
+Accuracy of the network on the 50000 test images: 74.6%
+ * Acc@1 77.042 Acc@5 93.832
+Accuracy of the ema network on the 50000 test images: 77.0%
+--
+EPOCH 69
+ * Acc@1 73.894 Acc@5 92.280
+Accuracy of the network on the 50000 test images: 73.9%
+ * Acc@1 77.116 Acc@5 93.858
+Accuracy of the ema network on the 50000 test images: 77.1%
+--
+EPOCH 70
+ * Acc@1 74.588 Acc@5 92.634
+Accuracy of the network on the 50000 test images: 74.6%
+ * Acc@1 77.242 Acc@5 93.854
+Accuracy of the ema network on the 50000 test images: 77.2%
+--
+EPOCH 71
+ * Acc@1 74.502 Acc@5 92.516
+Accuracy of the network on the 50000 test images: 74.5%
+ * Acc@1 77.358 Acc@5 93.890
+Accuracy of the ema network on the 50000 test images: 77.4%
+--
+EPOCH 72
+ * Acc@1 74.866 Acc@5 92.782
+Accuracy of the network on the 50000 test images: 74.9%
+ * Acc@1 77.404 Acc@5 93.960
+Accuracy of the ema network on the 50000 test images: 77.4%
+--
+EPOCH 73
+ * Acc@1 74.818 Acc@5 92.788
+Accuracy of the network on the 50000 test images: 74.8%
+ * Acc@1 77.424 Acc@5 93.966
+Accuracy of the ema network on the 50000 test images: 77.4%
+--
+EPOCH 74
+ * Acc@1 74.776 Acc@5 92.616
+Accuracy of the network on the 50000 test images: 74.8%
+ * Acc@1 77.474 Acc@5 94.004
+Accuracy of the ema network on the 50000 test images: 77.5%
+--
+EPOCH 75
+ * Acc@1 74.756 Acc@5 92.720
+Accuracy of the network on the 50000 test images: 74.8%
+ * Acc@1 77.542 Acc@5 94.014
+Accuracy of the ema network on the 50000 test images: 77.5%
+--
+EPOCH 76
+ * Acc@1 75.518 Acc@5 93.086
+Accuracy of the network on the 50000 test images: 75.5%
+ * Acc@1 77.602 Acc@5 94.036
+Accuracy of the ema network on the 50000 test images: 77.6%
+--
+EPOCH 77
+ * Acc@1 75.548 Acc@5 93.088
+Accuracy of the network on the 50000 test images: 75.5%
+ * Acc@1 77.686 Acc@5 94.074
+Accuracy of the ema network on the 50000 test images: 77.7%
+--
+EPOCH 78
+ * Acc@1 75.838 Acc@5 93.310
+Accuracy of the network on the 50000 test images: 75.8%
+ * Acc@1 77.714 Acc@5 94.102
+Accuracy of the ema network on the 50000 test images: 77.7%
+--
+EPOCH 79
+ * Acc@1 75.696 Acc@5 93.332
+Accuracy of the network on the 50000 test images: 75.7%
+ * Acc@1 77.750 Acc@5 94.114
+Accuracy of the ema network on the 50000 test images: 77.8%
+--
+EPOCH 80
+ * Acc@1 75.994 Acc@5 93.354
+Accuracy of the network on the 50000 test images: 76.0%
+ * Acc@1 77.736 Acc@5 94.112
+Accuracy of the ema network on the 50000 test images: 77.7%
+--
+EPOCH 81
+ * Acc@1 75.966 Acc@5 93.294
+Accuracy of the network on the 50000 test images: 76.0%
+ * Acc@1 77.742 Acc@5 94.154
+Accuracy of the ema network on the 50000 test images: 77.7%
+--
+EPOCH 82
+ * Acc@1 76.096 Acc@5 93.202
+Accuracy of the network on the 50000 test images: 76.1%
+ * Acc@1 77.728 Acc@5 94.160
+Accuracy of the ema network on the 50000 test images: 77.7%
+--
+EPOCH 83
+ * Acc@1 76.038 Acc@5 93.340
+Accuracy of the network on the 50000 test images: 76.0%
+ * Acc@1 77.792 Acc@5 94.160
+Accuracy of the ema network on the 50000 test images: 77.8%
+--
+EPOCH 84
+ * Acc@1 75.938 Acc@5 93.314
+Accuracy of the network on the 50000 test images: 75.9%
+ * Acc@1 77.858 Acc@5 94.162
+Accuracy of the ema network on the 50000 test images: 77.9%
+--
+EPOCH 85
+ * Acc@1 76.082 Acc@5 93.346
+Accuracy of the network on the 50000 test images: 76.1%
+ * Acc@1 77.890 Acc@5 94.208
+Accuracy of the ema network on the 50000 test images: 77.9%
+--
+EPOCH 86
+ * Acc@1 76.172 Acc@5 93.392
+Accuracy of the network on the 50000 test images: 76.2%
+ * Acc@1 77.890 Acc@5 94.234
+Accuracy of the ema network on the 50000 test images: 77.9%
+--
+EPOCH 87
+ * Acc@1 76.124 Acc@5 93.398
+Accuracy of the network on the 50000 test images: 76.1%
+ * Acc@1 77.882 Acc@5 94.272
+Accuracy of the ema network on the 50000 test images: 77.9%
+--
+EPOCH 88
+ * Acc@1 76.350 Acc@5 93.532
+Accuracy of the network on the 50000 test images: 76.3%
+ * Acc@1 77.952 Acc@5 94.264
+Accuracy of the ema network on the 50000 test images: 78.0%
+--
+EPOCH 89
+ * Acc@1 76.320 Acc@5 93.474
+Accuracy of the network on the 50000 test images: 76.3%
+ * Acc@1 77.944 Acc@5 94.270
+Accuracy of the ema network on the 50000 test images: 77.9%
+--
+EPOCH 90
+ * Acc@1 76.420 Acc@5 93.532
+Accuracy of the network on the 50000 test images: 76.4%
+ * Acc@1 77.956 Acc@5 94.282
+Accuracy of the ema network on the 50000 test images: 78.0%
+--
+EPOCH 91
+ * Acc@1 76.508 Acc@5 93.584
+Accuracy of the network on the 50000 test images: 76.5%
+ * Acc@1 77.996 Acc@5 94.268
+Accuracy of the ema network on the 50000 test images: 78.0%
+--
+EPOCH 92
+ * Acc@1 76.324 Acc@5 93.520
+Accuracy of the network on the 50000 test images: 76.3%
+ * Acc@1 78.056 Acc@5 94.276
+Accuracy of the ema network on the 50000 test images: 78.1%
+--
+EPOCH 93
+ * Acc@1 76.468 Acc@5 93.586
+Accuracy of the network on the 50000 test images: 76.5%
+ * Acc@1 78.050 Acc@5 94.292
+Accuracy of the ema network on the 50000 test images: 78.1%
+--
+EPOCH 94
+ * Acc@1 76.516 Acc@5 93.628
+Accuracy of the network on the 50000 test images: 76.5%
+ * Acc@1 78.076 Acc@5 94.292
+Accuracy of the ema network on the 50000 test images: 78.1%
+--
+EPOCH 95
+ * Acc@1 76.430 Acc@5 93.536
+Accuracy of the network on the 50000 test images: 76.4%
+ * Acc@1 78.124 Acc@5 94.332
+Accuracy of the ema network on the 50000 test images: 78.1%
+--
+EPOCH 96
+ * Acc@1 76.274 Acc@5 93.526
+Accuracy of the network on the 50000 test images: 76.3%
+ * Acc@1 78.146 Acc@5 94.336
+Accuracy of the ema network on the 50000 test images: 78.1%
+--
+EPOCH 97
+ * Acc@1 76.396 Acc@5 93.622
+Accuracy of the network on the 50000 test images: 76.4%
+ * Acc@1 78.146 Acc@5 94.372
+Accuracy of the ema network on the 50000 test images: 78.1%
+--
+EPOCH 98
+ * Acc@1 76.606 Acc@5 93.650
+Accuracy of the network on the 50000 test images: 76.6%
+ * Acc@1 78.166 Acc@5 94.358
+Accuracy of the ema network on the 50000 test images: 78.2%
+--
+EPOCH 99
+ * Acc@1 76.748 Acc@5 93.768
+Accuracy of the network on the 50000 test images: 76.7%
+ * Acc@1 78.220 Acc@5 94.354
+Accuracy of the ema network on the 50000 test images: 78.2%
+--
+EPOCH 100
+ * Acc@1 76.790 Acc@5 93.678
+Accuracy of the network on the 50000 test images: 76.8%
+ * Acc@1 78.260 Acc@5 94.376
+Accuracy of the ema network on the 50000 test images: 78.3%
+--
+EPOCH 101
+ * Acc@1 76.450 Acc@5 93.642
+Accuracy of the network on the 50000 test images: 76.4%
+ * Acc@1 78.262 Acc@5 94.402
+Accuracy of the ema network on the 50000 test images: 78.3%
+--
+EPOCH 102
+ * Acc@1 76.820 Acc@5 93.790
+Accuracy of the network on the 50000 test images: 76.8%
+ * Acc@1 78.272 Acc@5 94.418
+Accuracy of the ema network on the 50000 test images: 78.3%
+--
+EPOCH 103
+ * Acc@1 76.640 Acc@5 93.676
+Accuracy of the network on the 50000 test images: 76.6%
+ * Acc@1 78.298 Acc@5 94.426
+Accuracy of the ema network on the 50000 test images: 78.3%
+--
+EPOCH 104
+ * Acc@1 76.806 Acc@5 93.778
+Accuracy of the network on the 50000 test images: 76.8%
+ * Acc@1 78.388 Acc@5 94.430
+Accuracy of the ema network on the 50000 test images: 78.4%
+--
+EPOCH 105
+ * Acc@1 76.780 Acc@5 93.712
+Accuracy of the network on the 50000 test images: 76.8%
+ * Acc@1 78.374 Acc@5 94.436
+Accuracy of the ema network on the 50000 test images: 78.4%
+--
+EPOCH 106
+ * Acc@1 76.828 Acc@5 93.804
+Accuracy of the network on the 50000 test images: 76.8%
+ * Acc@1 78.426 Acc@5 94.458
+Accuracy of the ema network on the 50000 test images: 78.4%
+--
+EPOCH 107
+ * Acc@1 76.978 Acc@5 93.832
+Accuracy of the network on the 50000 test images: 77.0%
+ * Acc@1 78.500 Acc@5 94.460
+Accuracy of the ema network on the 50000 test images: 78.5%
+--
+EPOCH 108
+ * Acc@1 76.912 Acc@5 93.774
+Accuracy of the network on the 50000 test images: 76.9%
+ * Acc@1 78.546 Acc@5 94.478
+Accuracy of the ema network on the 50000 test images: 78.5%
+--
+EPOCH 109
+ * Acc@1 76.930 Acc@5 93.822
+Accuracy of the network on the 50000 test images: 76.9%
+ * Acc@1 78.548 Acc@5 94.520
+Accuracy of the ema network on the 50000 test images: 78.5%
+--
+EPOCH 110
+ * Acc@1 77.060 Acc@5 93.886
+Accuracy of the network on the 50000 test images: 77.1%
+ * Acc@1 78.588 Acc@5 94.546
+Accuracy of the ema network on the 50000 test images: 78.6%
+--
+EPOCH 111
+ * Acc@1 76.858 Acc@5 93.826
+Accuracy of the network on the 50000 test images: 76.9%
+ * Acc@1 78.604 Acc@5 94.560
+Accuracy of the ema network on the 50000 test images: 78.6%
+--
+EPOCH 112
+ * Acc@1 77.086 Acc@5 93.924
+Accuracy of the network on the 50000 test images: 77.1%
+ * Acc@1 78.626 Acc@5 94.588
+Accuracy of the ema network on the 50000 test images: 78.6%
+--
+EPOCH 113
+ * Acc@1 77.128 Acc@5 93.914
+Accuracy of the network on the 50000 test images: 77.1%
+ * Acc@1 78.654 Acc@5 94.594
+Accuracy of the ema network on the 50000 test images: 78.7%
+--
+EPOCH 114
+ * Acc@1 77.232 Acc@5 94.126
+Accuracy of the network on the 50000 test images: 77.2%
+ * Acc@1 78.638 Acc@5 94.604
+Accuracy of the ema network on the 50000 test images: 78.6%
+--
+EPOCH 115
+ * Acc@1 77.014 Acc@5 93.940
+Accuracy of the network on the 50000 test images: 77.0%
+ * Acc@1 78.646 Acc@5 94.626
+Accuracy of the ema network on the 50000 test images: 78.6%
+--
+EPOCH 116
+ * Acc@1 77.322 Acc@5 93.952
+Accuracy of the network on the 50000 test images: 77.3%
+ * Acc@1 78.636 Acc@5 94.622
+Accuracy of the ema network on the 50000 test images: 78.6%
+--
+EPOCH 117
+ * Acc@1 77.222 Acc@5 93.870
+Accuracy of the network on the 50000 test images: 77.2%
+ * Acc@1 78.646 Acc@5 94.606
+Accuracy of the ema network on the 50000 test images: 78.6%
+--
+EPOCH 118
+ * Acc@1 77.180 Acc@5 93.906
+Accuracy of the network on the 50000 test images: 77.2%
+ * Acc@1 78.710 Acc@5 94.644
+Accuracy of the ema network on the 50000 test images: 78.7%
+--
+EPOCH 119
+ * Acc@1 77.392 Acc@5 94.020
+Accuracy of the network on the 50000 test images: 77.4%
+ * Acc@1 78.714 Acc@5 94.666
+Accuracy of the ema network on the 50000 test images: 78.7%
+--
+EPOCH 120
+ * Acc@1 77.460 Acc@5 94.046
+Accuracy of the network on the 50000 test images: 77.5%
+ * Acc@1 78.774 Acc@5 94.694
+Accuracy of the ema network on the 50000 test images: 78.8%
+--
+EPOCH 121
+ * Acc@1 77.260 Acc@5 94.064
+Accuracy of the network on the 50000 test images: 77.3%
+ * Acc@1 78.826 Acc@5 94.684
+Accuracy of the ema network on the 50000 test images: 78.8%
+--
+EPOCH 122
+ * Acc@1 77.386 Acc@5 94.040
+Accuracy of the network on the 50000 test images: 77.4%
+ * Acc@1 78.874 Acc@5 94.692
+Accuracy of the ema network on the 50000 test images: 78.9%
+--
+EPOCH 123
+ * Acc@1 77.568 Acc@5 94.070
+Accuracy of the network on the 50000 test images: 77.6%
+ * Acc@1 78.894 Acc@5 94.722
+Accuracy of the ema network on the 50000 test images: 78.9%
+--
+EPOCH 124
+ * Acc@1 77.498 Acc@5 94.172
+Accuracy of the network on the 50000 test images: 77.5%
+ * Acc@1 78.908 Acc@5 94.730
+Accuracy of the ema network on the 50000 test images: 78.9%
+--
+EPOCH 125
+ * Acc@1 77.538 Acc@5 94.148
+Accuracy of the network on the 50000 test images: 77.5%
+ * Acc@1 78.936 Acc@5 94.736
+Accuracy of the ema network on the 50000 test images: 78.9%
+--
+EPOCH 126
+ * Acc@1 77.526 Acc@5 94.142
+Accuracy of the network on the 50000 test images: 77.5%
+ * Acc@1 78.990 Acc@5 94.734
+Accuracy of the ema network on the 50000 test images: 79.0%
+--
+EPOCH 127
+ * Acc@1 77.504 Acc@5 94.050
+Accuracy of the network on the 50000 test images: 77.5%
+ * Acc@1 79.018 Acc@5 94.756
+Accuracy of the ema network on the 50000 test images: 79.0%
+--
+EPOCH 128
+ * Acc@1 77.518 Acc@5 94.104
+Accuracy of the network on the 50000 test images: 77.5%
+ * Acc@1 79.060 Acc@5 94.768
+Accuracy of the ema network on the 50000 test images: 79.1%
+--
+EPOCH 129
+ * Acc@1 77.854 Acc@5 94.138
+Accuracy of the network on the 50000 test images: 77.9%
+ * Acc@1 79.040 Acc@5 94.780
+Accuracy of the ema network on the 50000 test images: 79.0%
+--
+EPOCH 130
+ * Acc@1 77.580 Acc@5 94.192
+Accuracy of the network on the 50000 test images: 77.6%
+ * Acc@1 79.090 Acc@5 94.804
+Accuracy of the ema network on the 50000 test images: 79.1%
+--
+EPOCH 131
+ * Acc@1 77.692 Acc@5 94.118
+Accuracy of the network on the 50000 test images: 77.7%
+ * Acc@1 79.138 Acc@5 94.806
+Accuracy of the ema network on the 50000 test images: 79.1%
+--
+EPOCH 132
+ * Acc@1 77.674 Acc@5 94.142
+Accuracy of the network on the 50000 test images: 77.7%
+ * Acc@1 79.188 Acc@5 94.800
+Accuracy of the ema network on the 50000 test images: 79.2%
+--
+EPOCH 133
+ * Acc@1 77.770 Acc@5 94.248
+Accuracy of the network on the 50000 test images: 77.8%
+ * Acc@1 79.176 Acc@5 94.812
+Accuracy of the ema network on the 50000 test images: 79.2%
+--
+EPOCH 134
+ * Acc@1 77.958 Acc@5 94.280
+Accuracy of the network on the 50000 test images: 78.0%
+ * Acc@1 79.212 Acc@5 94.856
+Accuracy of the ema network on the 50000 test images: 79.2%
+--
+EPOCH 135
+ * Acc@1 77.736 Acc@5 94.120
+Accuracy of the network on the 50000 test images: 77.7%
+ * Acc@1 79.234 Acc@5 94.852
+Accuracy of the ema network on the 50000 test images: 79.2%
+--
+EPOCH 136
+ * Acc@1 77.924 Acc@5 94.218
+Accuracy of the network on the 50000 test images: 77.9%
+ * Acc@1 79.244 Acc@5 94.886
+Accuracy of the ema network on the 50000 test images: 79.2%
+--
+EPOCH 137
+ * Acc@1 77.814 Acc@5 94.248
+Accuracy of the network on the 50000 test images: 77.8%
+ * Acc@1 79.314 Acc@5 94.934
+Accuracy of the ema network on the 50000 test images: 79.3%
+--
+EPOCH 138
+ * Acc@1 77.968 Acc@5 94.282
+Accuracy of the network on the 50000 test images: 78.0%
+ * Acc@1 79.348 Acc@5 94.934
+Accuracy of the ema network on the 50000 test images: 79.3%
+--
+EPOCH 139
+ * Acc@1 78.016 Acc@5 94.466
+Accuracy of the network on the 50000 test images: 78.0%
+ * Acc@1 79.336 Acc@5 94.936
+Accuracy of the ema network on the 50000 test images: 79.3%
+--
+EPOCH 140
+ * Acc@1 78.056 Acc@5 94.398
+Accuracy of the network on the 50000 test images: 78.1%
+ * Acc@1 79.336 Acc@5 94.942
+Accuracy of the ema network on the 50000 test images: 79.3%
+--
+EPOCH 141
+ * Acc@1 77.690 Acc@5 94.284
+Accuracy of the network on the 50000 test images: 77.7%
+ * Acc@1 79.332 Acc@5 94.956
+Accuracy of the ema network on the 50000 test images: 79.3%
+--
+EPOCH 142
+ * Acc@1 78.050 Acc@5 94.344
+Accuracy of the network on the 50000 test images: 78.0%
+ * Acc@1 79.360 Acc@5 94.974
+Accuracy of the ema network on the 50000 test images: 79.4%
+--
+EPOCH 143
+ * Acc@1 78.178 Acc@5 94.366
+Accuracy of the network on the 50000 test images: 78.2%
+ * Acc@1 79.332 Acc@5 95.022
+Accuracy of the ema network on the 50000 test images: 79.3%
+--
+EPOCH 144
+ * Acc@1 78.268 Acc@5 94.410
+Accuracy of the network on the 50000 test images: 78.3%
+ * Acc@1 79.384 Acc@5 95.024
+Accuracy of the ema network on the 50000 test images: 79.4%
+--
+EPOCH 145
+ * Acc@1 78.282 Acc@5 94.400
+Accuracy of the network on the 50000 test images: 78.3%
+ * Acc@1 79.424 Acc@5 95.016
+Accuracy of the ema network on the 50000 test images: 79.4%
+--
+EPOCH 146
+ * Acc@1 78.326 Acc@5 94.418
+Accuracy of the network on the 50000 test images: 78.3%
+ * Acc@1 79.430 Acc@5 95.050
+Accuracy of the ema network on the 50000 test images: 79.4%
+--
+EPOCH 147
+ * Acc@1 78.154 Acc@5 94.388
+Accuracy of the network on the 50000 test images: 78.2%
+ * Acc@1 79.444 Acc@5 95.038
+Accuracy of the ema network on the 50000 test images: 79.4%
+--
+EPOCH 148
+ * Acc@1 78.034 Acc@5 94.396
+Accuracy of the network on the 50000 test images: 78.0%
+ * Acc@1 79.470 Acc@5 95.066
+Accuracy of the ema network on the 50000 test images: 79.5%
+--
+EPOCH 149
+ * Acc@1 78.382 Acc@5 94.460
+Accuracy of the network on the 50000 test images: 78.4%
+ * Acc@1 79.534 Acc@5 95.072
+Accuracy of the ema network on the 50000 test images: 79.5%
+--
+EPOCH 150
+ * Acc@1 78.196 Acc@5 94.454
+Accuracy of the network on the 50000 test images: 78.2%
+ * Acc@1 79.582 Acc@5 95.070
+Accuracy of the ema network on the 50000 test images: 79.6%
+--
+EPOCH 151
+ * Acc@1 78.392 Acc@5 94.462
+Accuracy of the network on the 50000 test images: 78.4%
+ * Acc@1 79.572 Acc@5 95.050
+Accuracy of the ema network on the 50000 test images: 79.6%
+--
+EPOCH 152
+ * Acc@1 78.014 Acc@5 94.356
+Accuracy of the network on the 50000 test images: 78.0%
+ * Acc@1 79.586 Acc@5 95.068
+Accuracy of the ema network on the 50000 test images: 79.6%
+--
+EPOCH 153
+ * Acc@1 78.410 Acc@5 94.566
+Accuracy of the network on the 50000 test images: 78.4%
+ * Acc@1 79.616 Acc@5 95.060
+Accuracy of the ema network on the 50000 test images: 79.6%
+--
+EPOCH 154
+ * Acc@1 78.288 Acc@5 94.492
+Accuracy of the network on the 50000 test images: 78.3%
+ * Acc@1 79.686 Acc@5 95.102
+Accuracy of the ema network on the 50000 test images: 79.7%
+--
+EPOCH 155
+ * Acc@1 78.412 Acc@5 94.500
+Accuracy of the network on the 50000 test images: 78.4%
+ * Acc@1 79.688 Acc@5 95.116
+Accuracy of the ema network on the 50000 test images: 79.7%
+--
+EPOCH 156
+ * Acc@1 78.488 Acc@5 94.566
+Accuracy of the network on the 50000 test images: 78.5%
+ * Acc@1 79.710 Acc@5 95.132
+Accuracy of the ema network on the 50000 test images: 79.7%
+--
+EPOCH 157
+ * Acc@1 78.648 Acc@5 94.654
+Accuracy of the network on the 50000 test images: 78.6%
+ * Acc@1 79.692 Acc@5 95.128
+Accuracy of the ema network on the 50000 test images: 79.7%
+--
+EPOCH 158
+ * Acc@1 78.482 Acc@5 94.588
+Accuracy of the network on the 50000 test images: 78.5%
+ * Acc@1 79.746 Acc@5 95.162
+Accuracy of the ema network on the 50000 test images: 79.7%
+--
+EPOCH 159
+ * Acc@1 78.392 Acc@5 94.622
+Accuracy of the network on the 50000 test images: 78.4%
+ * Acc@1 79.756 Acc@5 95.188
+Accuracy of the ema network on the 50000 test images: 79.8%
+--
+EPOCH 160
+ * Acc@1 78.756 Acc@5 94.644
+Accuracy of the network on the 50000 test images: 78.8%
+ * Acc@1 79.810 Acc@5 95.192
+Accuracy of the ema network on the 50000 test images: 79.8%
+--
+EPOCH 161
+ * Acc@1 78.590 Acc@5 94.550
+Accuracy of the network on the 50000 test images: 78.6%
+ * Acc@1 79.828 Acc@5 95.196
+Accuracy of the ema network on the 50000 test images: 79.8%
+--
+EPOCH 162
+ * Acc@1 78.608 Acc@5 94.624
+Accuracy of the network on the 50000 test images: 78.6%
+ * Acc@1 79.830 Acc@5 95.184
+Accuracy of the ema network on the 50000 test images: 79.8%
+--
+EPOCH 163
+ * Acc@1 78.942 Acc@5 94.728
+Accuracy of the network on the 50000 test images: 78.9%
+ * Acc@1 79.858 Acc@5 95.210
+Accuracy of the ema network on the 50000 test images: 79.9%
+--
+EPOCH 164
+ * Acc@1 78.534 Acc@5 94.662
+Accuracy of the network on the 50000 test images: 78.5%
+ * Acc@1 79.870 Acc@5 95.222
+Accuracy of the ema network on the 50000 test images: 79.9%
+--
+EPOCH 165
+ * Acc@1 78.572 Acc@5 94.714
+Accuracy of the network on the 50000 test images: 78.6%
+ * Acc@1 79.892 Acc@5 95.250
+Accuracy of the ema network on the 50000 test images: 79.9%
+--
+EPOCH 166
+ * Acc@1 78.692 Acc@5 94.718
+Accuracy of the network on the 50000 test images: 78.7%
+ * Acc@1 79.916 Acc@5 95.256
+Accuracy of the ema network on the 50000 test images: 79.9%
+--
+EPOCH 167
+ * Acc@1 78.858 Acc@5 94.748
+Accuracy of the network on the 50000 test images: 78.9%
+ * Acc@1 79.982 Acc@5 95.274
+Accuracy of the ema network on the 50000 test images: 80.0%
+--
+EPOCH 168
+ * Acc@1 78.964 Acc@5 94.670
+Accuracy of the network on the 50000 test images: 79.0%
+ * Acc@1 80.028 Acc@5 95.304
+Accuracy of the ema network on the 50000 test images: 80.0%
+--
+EPOCH 169
+ * Acc@1 78.944 Acc@5 94.772
+Accuracy of the network on the 50000 test images: 78.9%
+ * Acc@1 80.018 Acc@5 95.322
+Accuracy of the ema network on the 50000 test images: 80.0%
+--
+EPOCH 170
+ * Acc@1 78.914 Acc@5 94.778
+Accuracy of the network on the 50000 test images: 78.9%
+ * Acc@1 80.040 Acc@5 95.356
+Accuracy of the ema network on the 50000 test images: 80.0%
+--
+EPOCH 171
+ * Acc@1 78.944 Acc@5 94.782
+Accuracy of the network on the 50000 test images: 78.9%
+ * Acc@1 80.082 Acc@5 95.346
+Accuracy of the ema network on the 50000 test images: 80.1%
+--
+EPOCH 172
+ * Acc@1 78.904 Acc@5 94.746
+Accuracy of the network on the 50000 test images: 78.9%
+ * Acc@1 80.114 Acc@5 95.336
+Accuracy of the ema network on the 50000 test images: 80.1%
+--
+EPOCH 173
+ * Acc@1 79.334 Acc@5 94.852
+Accuracy of the network on the 50000 test images: 79.3%
+ * Acc@1 80.112 Acc@5 95.324
+Accuracy of the ema network on the 50000 test images: 80.1%
+--
+EPOCH 174
+ * Acc@1 79.136 Acc@5 94.930
+Accuracy of the network on the 50000 test images: 79.1%
+ * Acc@1 80.138 Acc@5 95.334
+Accuracy of the ema network on the 50000 test images: 80.1%
+--
+EPOCH 175
+ * Acc@1 79.074 Acc@5 94.876
+Accuracy of the network on the 50000 test images: 79.1%
+ * Acc@1 80.170 Acc@5 95.340
+Accuracy of the ema network on the 50000 test images: 80.2%
+--
+EPOCH 176
+ * Acc@1 79.046 Acc@5 94.866
+Accuracy of the network on the 50000 test images: 79.0%
+ * Acc@1 80.242 Acc@5 95.364
+Accuracy of the ema network on the 50000 test images: 80.2%
+--
+EPOCH 177
+ * Acc@1 79.314 Acc@5 94.930
+Accuracy of the network on the 50000 test images: 79.3%
+ * Acc@1 80.244 Acc@5 95.378
+Accuracy of the ema network on the 50000 test images: 80.2%
+--
+EPOCH 178
+ * Acc@1 79.222 Acc@5 94.858
+Accuracy of the network on the 50000 test images: 79.2%
+ * Acc@1 80.266 Acc@5 95.386
+Accuracy of the ema network on the 50000 test images: 80.3%
+--
+EPOCH 179
+ * Acc@1 79.156 Acc@5 94.912
+Accuracy of the network on the 50000 test images: 79.2%
+ * Acc@1 80.236 Acc@5 95.380
+Accuracy of the ema network on the 50000 test images: 80.2%
+--
+EPOCH 180
+ * Acc@1 79.364 Acc@5 94.896
+Accuracy of the network on the 50000 test images: 79.4%
+ * Acc@1 80.278 Acc@5 95.380
+Accuracy of the ema network on the 50000 test images: 80.3%
+--
+EPOCH 181
+ * Acc@1 79.292 Acc@5 94.944
+Accuracy of the network on the 50000 test images: 79.3%
+ * Acc@1 80.286 Acc@5 95.354
+Accuracy of the ema network on the 50000 test images: 80.3%
+--
+EPOCH 182
+ * Acc@1 79.442 Acc@5 94.870
+Accuracy of the network on the 50000 test images: 79.4%
+ * Acc@1 80.326 Acc@5 95.380
+Accuracy of the ema network on the 50000 test images: 80.3%
+--
+EPOCH 183
+ * Acc@1 79.326 Acc@5 95.008
+Accuracy of the network on the 50000 test images: 79.3%
+ * Acc@1 80.364 Acc@5 95.414
+Accuracy of the ema network on the 50000 test images: 80.4%
+--
+EPOCH 184
+ * Acc@1 79.334 Acc@5 94.908
+Accuracy of the network on the 50000 test images: 79.3%
+ * Acc@1 80.406 Acc@5 95.412
+Accuracy of the ema network on the 50000 test images: 80.4%
+--
+EPOCH 185
+ * Acc@1 79.624 Acc@5 95.138
+Accuracy of the network on the 50000 test images: 79.6%
+ * Acc@1 80.388 Acc@5 95.430
+Accuracy of the ema network on the 50000 test images: 80.4%
+--
+EPOCH 186
+ * Acc@1 79.696 Acc@5 95.026
+Accuracy of the network on the 50000 test images: 79.7%
+ * Acc@1 80.432 Acc@5 95.446
+Accuracy of the ema network on the 50000 test images: 80.4%
+--
+EPOCH 187
+ * Acc@1 79.676 Acc@5 95.114
+Accuracy of the network on the 50000 test images: 79.7%
+ * Acc@1 80.484 Acc@5 95.438
+Accuracy of the ema network on the 50000 test images: 80.5%
+--
+EPOCH 188
+ * Acc@1 79.564 Acc@5 94.996
+Accuracy of the network on the 50000 test images: 79.6%
+ * Acc@1 80.494 Acc@5 95.450
+Accuracy of the ema network on the 50000 test images: 80.5%
+--
+EPOCH 189
+ * Acc@1 79.554 Acc@5 94.996
+Accuracy of the network on the 50000 test images: 79.6%
+ * Acc@1 80.522 Acc@5 95.484
+Accuracy of the ema network on the 50000 test images: 80.5%
+--
+EPOCH 190
+ * Acc@1 79.614 Acc@5 95.094
+Accuracy of the network on the 50000 test images: 79.6%
+ * Acc@1 80.538 Acc@5 95.502
+Accuracy of the ema network on the 50000 test images: 80.5%
+--
+EPOCH 191
+ * Acc@1 79.678 Acc@5 95.140
+Accuracy of the network on the 50000 test images: 79.7%
+ * Acc@1 80.544 Acc@5 95.518
+Accuracy of the ema network on the 50000 test images: 80.5%
+--
+EPOCH 192
+ * Acc@1 79.602 Acc@5 95.030
+Accuracy of the network on the 50000 test images: 79.6%
+ * Acc@1 80.576 Acc@5 95.510
+Accuracy of the ema network on the 50000 test images: 80.6%
+--
+EPOCH 193
+ * Acc@1 79.670 Acc@5 95.118
+Accuracy of the network on the 50000 test images: 79.7%
+ * Acc@1 80.582 Acc@5 95.516
+Accuracy of the ema network on the 50000 test images: 80.6%
+--
+EPOCH 194
+ * Acc@1 79.822 Acc@5 95.246
+Accuracy of the network on the 50000 test images: 79.8%
+ * Acc@1 80.576 Acc@5 95.542
+Accuracy of the ema network on the 50000 test images: 80.6%
+--
+EPOCH 195
+ * Acc@1 79.760 Acc@5 95.180
+Accuracy of the network on the 50000 test images: 79.8%
+ * Acc@1 80.606 Acc@5 95.536
+Accuracy of the ema network on the 50000 test images: 80.6%
+--
+EPOCH 196
+ * Acc@1 79.710 Acc@5 95.248
+Accuracy of the network on the 50000 test images: 79.7%
+ * Acc@1 80.662 Acc@5 95.550
+Accuracy of the ema network on the 50000 test images: 80.7%
+--
+EPOCH 197
+ * Acc@1 79.816 Acc@5 95.172
+Accuracy of the network on the 50000 test images: 79.8%
+ * Acc@1 80.686 Acc@5 95.566
+Accuracy of the ema network on the 50000 test images: 80.7%
+--
+EPOCH 198
+ * Acc@1 79.816 Acc@5 95.220
+Accuracy of the network on the 50000 test images: 79.8%
+ * Acc@1 80.740 Acc@5 95.586
+Accuracy of the ema network on the 50000 test images: 80.7%
+--
+EPOCH 199
+ * Acc@1 79.886 Acc@5 95.196
+Accuracy of the network on the 50000 test images: 79.9%
+ * Acc@1 80.762 Acc@5 95.614
+Accuracy of the ema network on the 50000 test images: 80.8%
+--
+EPOCH 200
+ * Acc@1 79.876 Acc@5 95.262
+Accuracy of the network on the 50000 test images: 79.9%
+ * Acc@1 80.782 Acc@5 95.606
+Accuracy of the ema network on the 50000 test images: 80.8%
+--
+EPOCH 201
+ * Acc@1 80.010 Acc@5 95.312
+Accuracy of the network on the 50000 test images: 80.0%
+ * Acc@1 80.808 Acc@5 95.594
+Accuracy of the ema network on the 50000 test images: 80.8%
+--
+EPOCH 202
+ * Acc@1 80.042 Acc@5 95.274
+Accuracy of the network on the 50000 test images: 80.0%
+ * Acc@1 80.830 Acc@5 95.580
+Accuracy of the ema network on the 50000 test images: 80.8%
+--
+EPOCH 203
+ * Acc@1 79.756 Acc@5 95.164
+Accuracy of the network on the 50000 test images: 79.8%
+ * Acc@1 80.818 Acc@5 95.582
+Accuracy of the ema network on the 50000 test images: 80.8%
+--
+EPOCH 204
+ * Acc@1 80.216 Acc@5 95.232
+Accuracy of the network on the 50000 test images: 80.2%
+ * Acc@1 80.844 Acc@5 95.604
+Accuracy of the ema network on the 50000 test images: 80.8%
+--
+EPOCH 205
+ * Acc@1 80.248 Acc@5 95.362
+Accuracy of the network on the 50000 test images: 80.2%
+ * Acc@1 80.876 Acc@5 95.610
+Accuracy of the ema network on the 50000 test images: 80.9%
+--
+EPOCH 206
+ * Acc@1 80.186 Acc@5 95.400
+Accuracy of the network on the 50000 test images: 80.2%
+ * Acc@1 80.910 Acc@5 95.642
+Accuracy of the ema network on the 50000 test images: 80.9%
+--
+EPOCH 207
+ * Acc@1 80.306 Acc@5 95.386
+Accuracy of the network on the 50000 test images: 80.3%
+ * Acc@1 80.918 Acc@5 95.668
+Accuracy of the ema network on the 50000 test images: 80.9%
+--
+EPOCH 208
+ * Acc@1 80.118 Acc@5 95.214
+Accuracy of the network on the 50000 test images: 80.1%
+ * Acc@1 80.930 Acc@5 95.670
+Accuracy of the ema network on the 50000 test images: 80.9%
+--
+EPOCH 209
+ * Acc@1 80.264 Acc@5 95.344
+Accuracy of the network on the 50000 test images: 80.3%
+ * Acc@1 80.942 Acc@5 95.652
+Accuracy of the ema network on the 50000 test images: 80.9%
+--
+EPOCH 210
+ * Acc@1 80.312 Acc@5 95.306
+Accuracy of the network on the 50000 test images: 80.3%
+ * Acc@1 80.988 Acc@5 95.654
+Accuracy of the ema network on the 50000 test images: 81.0%
+--
+EPOCH 211
+ * Acc@1 80.398 Acc@5 95.386
+Accuracy of the network on the 50000 test images: 80.4%
+ * Acc@1 81.014 Acc@5 95.650
+Accuracy of the ema network on the 50000 test images: 81.0%
+--
+EPOCH 212
+ * Acc@1 80.500 Acc@5 95.298
+Accuracy of the network on the 50000 test images: 80.5%
+ * Acc@1 81.062 Acc@5 95.650
+Accuracy of the ema network on the 50000 test images: 81.1%
+--
+EPOCH 213
+ * Acc@1 80.434 Acc@5 95.442
+Accuracy of the network on the 50000 test images: 80.4%
+ * Acc@1 81.078 Acc@5 95.678
+Accuracy of the ema network on the 50000 test images: 81.1%
+--
+EPOCH 214
+ * Acc@1 80.394 Acc@5 95.446
+Accuracy of the network on the 50000 test images: 80.4%
+ * Acc@1 81.092 Acc@5 95.696
+Accuracy of the ema network on the 50000 test images: 81.1%
+--
+EPOCH 215
+ * Acc@1 80.494 Acc@5 95.502
+Accuracy of the network on the 50000 test images: 80.5%
+ * Acc@1 81.112 Acc@5 95.702
+Accuracy of the ema network on the 50000 test images: 81.1%
+--
+EPOCH 216
+ * Acc@1 80.488 Acc@5 95.586
+Accuracy of the network on the 50000 test images: 80.5%
+ * Acc@1 81.130 Acc@5 95.708
+Accuracy of the ema network on the 50000 test images: 81.1%
+--
+EPOCH 217
+ * Acc@1 80.550 Acc@5 95.500
+Accuracy of the network on the 50000 test images: 80.5%
+ * Acc@1 81.158 Acc@5 95.730
+Accuracy of the ema network on the 50000 test images: 81.2%
+--
+EPOCH 218
+ * Acc@1 80.530 Acc@5 95.490
+Accuracy of the network on the 50000 test images: 80.5%
+ * Acc@1 81.170 Acc@5 95.738
+Accuracy of the ema network on the 50000 test images: 81.2%
+--
+EPOCH 219
+ * Acc@1 80.602 Acc@5 95.484
+Accuracy of the network on the 50000 test images: 80.6%
+ * Acc@1 81.204 Acc@5 95.750
+Accuracy of the ema network on the 50000 test images: 81.2%
+--
+EPOCH 220
+ * Acc@1 80.500 Acc@5 95.476
+Accuracy of the network on the 50000 test images: 80.5%
+ * Acc@1 81.222 Acc@5 95.744
+Accuracy of the ema network on the 50000 test images: 81.2%
+--
+EPOCH 221
+ * Acc@1 80.646 Acc@5 95.510
+Accuracy of the network on the 50000 test images: 80.6%
+ * Acc@1 81.210 Acc@5 95.742
+Accuracy of the ema network on the 50000 test images: 81.2%
+--
+EPOCH 222
+ * Acc@1 80.536 Acc@5 95.496
+Accuracy of the network on the 50000 test images: 80.5%
+ * Acc@1 81.250 Acc@5 95.766
+Accuracy of the ema network on the 50000 test images: 81.2%
+--
+EPOCH 223
+ * Acc@1 80.382 Acc@5 95.418
+Accuracy of the network on the 50000 test images: 80.4%
+ * Acc@1 81.242 Acc@5 95.780
+Accuracy of the ema network on the 50000 test images: 81.2%
+--
+EPOCH 224
+ * Acc@1 80.794 Acc@5 95.592
+Accuracy of the network on the 50000 test images: 80.8%
+ * Acc@1 81.270 Acc@5 95.768
+Accuracy of the ema network on the 50000 test images: 81.3%
+--
+EPOCH 225
+ * Acc@1 80.562 Acc@5 95.564
+Accuracy of the network on the 50000 test images: 80.6%
+ * Acc@1 81.270 Acc@5 95.766
+Accuracy of the ema network on the 50000 test images: 81.3%
+--
+EPOCH 226
+ * Acc@1 80.556 Acc@5 95.522
+Accuracy of the network on the 50000 test images: 80.6%
+ * Acc@1 81.236 Acc@5 95.780
+Accuracy of the ema network on the 50000 test images: 81.2%
+--
+EPOCH 227
+ * Acc@1 80.808 Acc@5 95.622
+Accuracy of the network on the 50000 test images: 80.8%
+ * Acc@1 81.236 Acc@5 95.772
+Accuracy of the ema network on the 50000 test images: 81.2%
+--
+EPOCH 228
+ * Acc@1 80.832 Acc@5 95.674
+Accuracy of the network on the 50000 test images: 80.8%
+ * Acc@1 81.272 Acc@5 95.762
+Accuracy of the ema network on the 50000 test images: 81.3%
+--
+EPOCH 229
+ * Acc@1 80.836 Acc@5 95.574
+Accuracy of the network on the 50000 test images: 80.8%
+ * Acc@1 81.296 Acc@5 95.800
+Accuracy of the ema network on the 50000 test images: 81.3%
+--
+EPOCH 230
+ * Acc@1 80.866 Acc@5 95.574
+Accuracy of the network on the 50000 test images: 80.9%
+ * Acc@1 81.312 Acc@5 95.798
+Accuracy of the ema network on the 50000 test images: 81.3%
+--
+EPOCH 231
+ * Acc@1 80.848 Acc@5 95.626
+Accuracy of the network on the 50000 test images: 80.8%
+ * Acc@1 81.370 Acc@5 95.798
+Accuracy of the ema network on the 50000 test images: 81.4%
+--
+EPOCH 232
+ * Acc@1 80.966 Acc@5 95.636
+Accuracy of the network on the 50000 test images: 81.0%
+ * Acc@1 81.396 Acc@5 95.812
+Accuracy of the ema network on the 50000 test images: 81.4%
+--
+EPOCH 233
+ * Acc@1 80.926 Acc@5 95.656
+Accuracy of the network on the 50000 test images: 80.9%
+ * Acc@1 81.432 Acc@5 95.836
+Accuracy of the ema network on the 50000 test images: 81.4%
+--
+EPOCH 234
+ * Acc@1 80.954 Acc@5 95.702
+Accuracy of the network on the 50000 test images: 81.0%
+ * Acc@1 81.420 Acc@5 95.854
+Accuracy of the ema network on the 50000 test images: 81.4%
+--
+EPOCH 235
+ * Acc@1 80.892 Acc@5 95.680
+Accuracy of the network on the 50000 test images: 80.9%
+ * Acc@1 81.450 Acc@5 95.876
+Accuracy of the ema network on the 50000 test images: 81.5%
+--
+EPOCH 236
+ * Acc@1 81.064 Acc@5 95.678
+Accuracy of the network on the 50000 test images: 81.1%
+ * Acc@1 81.482 Acc@5 95.874
+Accuracy of the ema network on the 50000 test images: 81.5%
+--
+EPOCH 237
+ * Acc@1 81.106 Acc@5 95.670
+Accuracy of the network on the 50000 test images: 81.1%
+ * Acc@1 81.500 Acc@5 95.874
+Accuracy of the ema network on the 50000 test images: 81.5%
+--
+EPOCH 238
+ * Acc@1 81.244 Acc@5 95.778
+Accuracy of the network on the 50000 test images: 81.2%
+ * Acc@1 81.494 Acc@5 95.888
+Accuracy of the ema network on the 50000 test images: 81.5%
+--
+EPOCH 239
+ * Acc@1 81.078 Acc@5 95.690
+Accuracy of the network on the 50000 test images: 81.1%
+ * Acc@1 81.514 Acc@5 95.894
+Accuracy of the ema network on the 50000 test images: 81.5%
+--
+EPOCH 240
+ * Acc@1 81.108 Acc@5 95.722
+Accuracy of the network on the 50000 test images: 81.1%
+ * Acc@1 81.538 Acc@5 95.898
+Accuracy of the ema network on the 50000 test images: 81.5%
+--
+EPOCH 241
+ * Acc@1 81.220 Acc@5 95.772
+Accuracy of the network on the 50000 test images: 81.2%
+ * Acc@1 81.548 Acc@5 95.906
+Accuracy of the ema network on the 50000 test images: 81.5%
+--
+EPOCH 242
+ * Acc@1 81.334 Acc@5 95.796
+Accuracy of the network on the 50000 test images: 81.3%
+ * Acc@1 81.566 Acc@5 95.920
+Accuracy of the ema network on the 50000 test images: 81.6%
+--
+EPOCH 243
+ * Acc@1 81.354 Acc@5 95.746
+Accuracy of the network on the 50000 test images: 81.4%
+ * Acc@1 81.602 Acc@5 95.922
+Accuracy of the ema network on the 50000 test images: 81.6%
+--
+EPOCH 244
+ * Acc@1 81.248 Acc@5 95.778
+Accuracy of the network on the 50000 test images: 81.2%
+ * Acc@1 81.616 Acc@5 95.920
+Accuracy of the ema network on the 50000 test images: 81.6%
+--
+EPOCH 245
+ * Acc@1 81.312 Acc@5 95.770
+Accuracy of the network on the 50000 test images: 81.3%
+ * Acc@1 81.598 Acc@5 95.912
+Accuracy of the ema network on the 50000 test images: 81.6%
+--
+EPOCH 246
+ * Acc@1 81.430 Acc@5 95.816
+Accuracy of the network on the 50000 test images: 81.4%
+ * Acc@1 81.636 Acc@5 95.908
+Accuracy of the ema network on the 50000 test images: 81.6%
+--
+EPOCH 247
+ * Acc@1 81.330 Acc@5 95.786
+Accuracy of the network on the 50000 test images: 81.3%
+ * Acc@1 81.650 Acc@5 95.920
+Accuracy of the ema network on the 50000 test images: 81.6%
+--
+EPOCH 248
+ * Acc@1 81.542 Acc@5 95.930
+Accuracy of the network on the 50000 test images: 81.5%
+ * Acc@1 81.634 Acc@5 95.934
+Accuracy of the ema network on the 50000 test images: 81.6%
+--
+EPOCH 249
+ * Acc@1 81.426 Acc@5 95.908
+Accuracy of the network on the 50000 test images: 81.4%
+ * Acc@1 81.662 Acc@5 95.948
+Accuracy of the ema network on the 50000 test images: 81.7%
+--
+EPOCH 250
+ * Acc@1 81.532 Acc@5 95.844
+Accuracy of the network on the 50000 test images: 81.5%
+ * Acc@1 81.726 Acc@5 95.966
+Accuracy of the ema network on the 50000 test images: 81.7%
+--
+EPOCH 251
+ * Acc@1 81.498 Acc@5 95.856
+Accuracy of the network on the 50000 test images: 81.5%
+ * Acc@1 81.704 Acc@5 95.984
+Accuracy of the ema network on the 50000 test images: 81.7%
+--
+EPOCH 252
+ * Acc@1 81.398 Acc@5 95.838
+Accuracy of the network on the 50000 test images: 81.4%
+ * Acc@1 81.700 Acc@5 96.004
+Accuracy of the ema network on the 50000 test images: 81.7%
+--
+EPOCH 253
+ * Acc@1 81.418 Acc@5 95.886
+Accuracy of the network on the 50000 test images: 81.4%
+ * Acc@1 81.692 Acc@5 96.008
+Accuracy of the ema network on the 50000 test images: 81.7%
+--
+EPOCH 254
+ * Acc@1 81.642 Acc@5 95.894
+Accuracy of the network on the 50000 test images: 81.6%
+ * Acc@1 81.704 Acc@5 96.002
+Accuracy of the ema network on the 50000 test images: 81.7%
+--
+EPOCH 255
+ * Acc@1 81.444 Acc@5 95.906
+Accuracy of the network on the 50000 test images: 81.4%
+ * Acc@1 81.690 Acc@5 96.008
+Accuracy of the ema network on the 50000 test images: 81.7%
+--
+EPOCH 256
+ * Acc@1 81.590 Acc@5 95.942
+Accuracy of the network on the 50000 test images: 81.6%
+ * Acc@1 81.700 Acc@5 96.014
+Accuracy of the ema network on the 50000 test images: 81.7%
+--
+EPOCH 257
+ * Acc@1 81.550 Acc@5 95.920
+Accuracy of the network on the 50000 test images: 81.6%
+ * Acc@1 81.742 Acc@5 96.014
+Accuracy of the ema network on the 50000 test images: 81.7%
+--
+EPOCH 258
+ * Acc@1 81.554 Acc@5 95.924
+Accuracy of the network on the 50000 test images: 81.6%
+ * Acc@1 81.758 Acc@5 96.012
+Accuracy of the ema network on the 50000 test images: 81.8%
+--
+EPOCH 259
+ * Acc@1 81.576 Acc@5 95.896
+Accuracy of the network on the 50000 test images: 81.6%
+ * Acc@1 81.766 Acc@5 96.016
+Accuracy of the ema network on the 50000 test images: 81.8%
+--
+EPOCH 260
+ * Acc@1 81.662 Acc@5 95.966
+Accuracy of the network on the 50000 test images: 81.7%
+ * Acc@1 81.790 Acc@5 96.006
+Accuracy of the ema network on the 50000 test images: 81.8%
+--
+EPOCH 261
+ * Acc@1 81.754 Acc@5 95.950
+Accuracy of the network on the 50000 test images: 81.8%
+ * Acc@1 81.800 Acc@5 96.016
+Accuracy of the ema network on the 50000 test images: 81.8%
+--
+EPOCH 262
+ * Acc@1 81.732 Acc@5 96.002
+Accuracy of the network on the 50000 test images: 81.7%
+ * Acc@1 81.788 Acc@5 96.012
+Accuracy of the ema network on the 50000 test images: 81.8%
+--
+EPOCH 263
+ * Acc@1 81.714 Acc@5 95.988
+Accuracy of the network on the 50000 test images: 81.7%
+ * Acc@1 81.826 Acc@5 96.034
+Accuracy of the ema network on the 50000 test images: 81.8%
+--
+EPOCH 264
+ * Acc@1 81.750 Acc@5 95.986
+Accuracy of the network on the 50000 test images: 81.7%
+ * Acc@1 81.832 Acc@5 96.044
+Accuracy of the ema network on the 50000 test images: 81.8%
+--
+EPOCH 265
+ * Acc@1 81.784 Acc@5 95.960
+Accuracy of the network on the 50000 test images: 81.8%
+ * Acc@1 81.840 Acc@5 96.028
+Accuracy of the ema network on the 50000 test images: 81.8%
+--
+EPOCH 266
+ * Acc@1 81.662 Acc@5 95.972
+Accuracy of the network on the 50000 test images: 81.7%
+ * Acc@1 81.832 Acc@5 96.018
+Accuracy of the ema network on the 50000 test images: 81.8%
+--
+EPOCH 267
+ * Acc@1 81.750 Acc@5 95.980
+Accuracy of the network on the 50000 test images: 81.8%
+ * Acc@1 81.838 Acc@5 96.032
+Accuracy of the ema network on the 50000 test images: 81.8%
+--
+EPOCH 268
+ * Acc@1 81.860 Acc@5 96.036
+Accuracy of the network on the 50000 test images: 81.9%
+ * Acc@1 81.820 Acc@5 96.044
+Accuracy of the ema network on the 50000 test images: 81.8%
+--
+EPOCH 269
+ * Acc@1 81.742 Acc@5 96.016
+Accuracy of the network on the 50000 test images: 81.7%
+ * Acc@1 81.798 Acc@5 96.056
+Accuracy of the ema network on the 50000 test images: 81.8%
+--
+EPOCH 270
+ * Acc@1 81.868 Acc@5 96.048
+Accuracy of the network on the 50000 test images: 81.9%
+ * Acc@1 81.816 Acc@5 96.054
+Accuracy of the ema network on the 50000 test images: 81.8%
+--
+EPOCH 271
+ * Acc@1 81.828 Acc@5 95.950
+Accuracy of the network on the 50000 test images: 81.8%
+ * Acc@1 81.848 Acc@5 96.056
+Accuracy of the ema network on the 50000 test images: 81.8%
+--
+EPOCH 272
+ * Acc@1 81.836 Acc@5 96.000
+Accuracy of the network on the 50000 test images: 81.8%
+ * Acc@1 81.876 Acc@5 96.052
+Accuracy of the ema network on the 50000 test images: 81.9%
+--
+EPOCH 273
+ * Acc@1 81.826 Acc@5 95.956
+Accuracy of the network on the 50000 test images: 81.8%
+ * Acc@1 81.898 Acc@5 96.060
+Accuracy of the ema network on the 50000 test images: 81.9%
+--
+EPOCH 274
+ * Acc@1 81.848 Acc@5 96.026
+Accuracy of the network on the 50000 test images: 81.8%
+ * Acc@1 81.928 Acc@5 96.086
+Accuracy of the ema network on the 50000 test images: 81.9%
+--
+EPOCH 275
+ * Acc@1 81.856 Acc@5 96.006
+Accuracy of the network on the 50000 test images: 81.9%
+ * Acc@1 81.968 Acc@5 96.096
+Accuracy of the ema network on the 50000 test images: 82.0%
+--
+EPOCH 276
+ * Acc@1 81.862 Acc@5 96.038
+Accuracy of the network on the 50000 test images: 81.9%
+ * Acc@1 81.968 Acc@5 96.086
+Accuracy of the ema network on the 50000 test images: 82.0%
+--
+EPOCH 277
+ * Acc@1 81.884 Acc@5 96.030
+Accuracy of the network on the 50000 test images: 81.9%
+ * Acc@1 81.962 Acc@5 96.090
+Accuracy of the ema network on the 50000 test images: 82.0%
+--
+EPOCH 278
+ * Acc@1 81.988 Acc@5 96.082
+Accuracy of the network on the 50000 test images: 82.0%
+ * Acc@1 81.950 Acc@5 96.086
+Accuracy of the ema network on the 50000 test images: 82.0%
+--
+EPOCH 279
+ * Acc@1 81.842 Acc@5 96.000
+Accuracy of the network on the 50000 test images: 81.8%
+ * Acc@1 81.978 Acc@5 96.076
+Accuracy of the ema network on the 50000 test images: 82.0%
+--
+EPOCH 280
+ * Acc@1 81.940 Acc@5 96.068
+Accuracy of the network on the 50000 test images: 81.9%
+ * Acc@1 81.970 Acc@5 96.086
+Accuracy of the ema network on the 50000 test images: 82.0%
+--
+EPOCH 281
+ * Acc@1 81.938 Acc@5 96.084
+Accuracy of the network on the 50000 test images: 81.9%
+ * Acc@1 81.960 Acc@5 96.080
+Accuracy of the ema network on the 50000 test images: 82.0%
+--
+EPOCH 282
+ * Acc@1 81.990 Acc@5 96.120
+Accuracy of the network on the 50000 test images: 82.0%
+ * Acc@1 81.980 Acc@5 96.076
+Accuracy of the ema network on the 50000 test images: 82.0%
+--
+EPOCH 283
+ * Acc@1 81.948 Acc@5 96.144
+Accuracy of the network on the 50000 test images: 81.9%
+ * Acc@1 81.990 Acc@5 96.076
+Accuracy of the ema network on the 50000 test images: 82.0%
+--
+EPOCH 284
+ * Acc@1 81.994 Acc@5 96.110
+Accuracy of the network on the 50000 test images: 82.0%
+ * Acc@1 82.000 Acc@5 96.078
+Accuracy of the ema network on the 50000 test images: 82.0%
+--
+EPOCH 285
+ * Acc@1 81.848 Acc@5 96.040
+Accuracy of the network on the 50000 test images: 81.8%
+ * Acc@1 82.012 Acc@5 96.088
+Accuracy of the ema network on the 50000 test images: 82.0%
+--
+EPOCH 286
+ * Acc@1 82.038 Acc@5 96.060
+Accuracy of the network on the 50000 test images: 82.0%
+ * Acc@1 82.018 Acc@5 96.088
+Accuracy of the ema network on the 50000 test images: 82.0%
+--
+EPOCH 287
+ * Acc@1 81.984 Acc@5 96.056
+Accuracy of the network on the 50000 test images: 82.0%
+ * Acc@1 82.022 Acc@5 96.084
+Accuracy of the ema network on the 50000 test images: 82.0%
+--
+EPOCH 288
+ * Acc@1 81.926 Acc@5 95.982
+Accuracy of the network on the 50000 test images: 81.9%
+ * Acc@1 82.018 Acc@5 96.098
+Accuracy of the ema network on the 50000 test images: 82.0%
+--
+EPOCH 289
+ * Acc@1 82.008 Acc@5 96.030
+Accuracy of the network on the 50000 test images: 82.0%
+ * Acc@1 82.028 Acc@5 96.092
+Accuracy of the ema network on the 50000 test images: 82.0%
+--
+EPOCH 290
+ * Acc@1 82.038 Acc@5 96.078
+Accuracy of the network on the 50000 test images: 82.0%
+ * Acc@1 82.048 Acc@5 96.102
+Accuracy of the ema network on the 50000 test images: 82.0%
+--
+EPOCH 291
+ * Acc@1 82.078 Acc@5 96.110
+Accuracy of the network on the 50000 test images: 82.1%
+ * Acc@1 82.052 Acc@5 96.100
+Accuracy of the ema network on the 50000 test images: 82.1%
+--
+EPOCH 292
+ * Acc@1 82.072 Acc@5 96.104
+Accuracy of the network on the 50000 test images: 82.1%
+ * Acc@1 82.052 Acc@5 96.096
+Accuracy of the ema network on the 50000 test images: 82.1%
+--
+EPOCH 293
+ * Acc@1 81.950 Acc@5 96.074
+Accuracy of the network on the 50000 test images: 82.0%
+ * Acc@1 82.034 Acc@5 96.106
+Accuracy of the ema network on the 50000 test images: 82.0%
+--
+EPOCH 294
+ * Acc@1 82.032 Acc@5 96.108
+Accuracy of the network on the 50000 test images: 82.0%
+ * Acc@1 82.056 Acc@5 96.108
+Accuracy of the ema network on the 50000 test images: 82.1%
+--
+EPOCH 295
+ * Acc@1 82.032 Acc@5 96.104
+Accuracy of the network on the 50000 test images: 82.0%
+ * Acc@1 82.048 Acc@5 96.100
+Accuracy of the ema network on the 50000 test images: 82.0%
+--
+EPOCH 296
+ * Acc@1 82.024 Acc@5 96.104
+Accuracy of the network on the 50000 test images: 82.0%
+ * Acc@1 82.052 Acc@5 96.100
+Accuracy of the ema network on the 50000 test images: 82.1%
+--
+EPOCH 297
+ * Acc@1 82.050 Acc@5 96.088
+Accuracy of the network on the 50000 test images: 82.1%
+ * Acc@1 82.058 Acc@5 96.102
+Accuracy of the ema network on the 50000 test images: 82.1%
+--
+EPOCH 298
+ * Acc@1 82.072 Acc@5 96.084
+Accuracy of the network on the 50000 test images: 82.1%
+ * Acc@1 82.062 Acc@5 96.096
+Accuracy of the ema network on the 50000 test images: 82.1%
+--
+EPOCH 299
+ * Acc@1 81.998 Acc@5 96.088
+Accuracy of the network on the 50000 test images: 82.0%
+ * Acc@1 82.066 Acc@5 96.104
+Accuracy of the ema network on the 50000 test images: 82.1%
+--
+EPOCH 300
+ * Acc@1 82.052 Acc@5 96.064
+Accuracy of the network on the 50000 test images: 82.1%
+ * Acc@1 82.076 Acc@5 96.108
+Accuracy of the ema network on the 50000 test images: 82.1%

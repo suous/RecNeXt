@@ -1,26 +1,35 @@
 import torch
-import time
+import argparse
 from timm import create_model
-import model
-import utils
 from fvcore.nn import FlopCountAnalysis
 
-T0 = 5
-T1 = 10
+import model
+import utils
 
-for n, batch_size, resolution in [
-    ('recnext_m1', 1024, 224),
-    ('recnext_m2', 1024, 224),
-    ('recnext_m3', 1024, 224),
-    ('recnext_m4', 1024, 224),
-    ('recnext_m5', 1024, 224),
-]:
-    inputs = torch.randn(1, 3, resolution,
-                            resolution)
-    model = create_model(n, num_classes=1000)
+
+def analyze_model(model_name, resolution):
+    print(f"Analyzing model: {model_name}")
+    print(f"Resolution: {resolution}x{resolution}")
+
+    inputs = torch.randn(1, 3, resolution, resolution)
+    model = create_model(model_name, num_classes=1000)
     utils.replace_batchnorm(model)
-    n_parameters = sum(p.numel()
-                       for p in model.parameters() if p.requires_grad)
-    print('number of params:', n_parameters / 1e6)
+
+    n_parameters = sum(p.numel() for p in model.parameters() if p.requires_grad)
+    print(f'Parameters (M): {n_parameters / 1e6:.2f}')
+
     flops = FlopCountAnalysis(model, inputs)
-    print("flops: ", flops.total() / 1e9)
+    print(f"FLOPs (G): {flops.total() / 1e9:.2f}")
+
+
+def main():
+    parser = argparse.ArgumentParser(description='Analyze a timm model.')
+    parser.add_argument('-m', '--model-name', type=str, required=True, help='The model name to analyze.')
+    parser.add_argument('-r', '--resolution', type=int, default=224, help='Input resolution for the model.')
+
+    args = parser.parse_args()
+    analyze_model(args.model_name, args.resolution)
+
+
+if __name__ == '__main__':
+    main()

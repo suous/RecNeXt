@@ -16,9 +16,10 @@
 
   ```python
   class RecConv2d(nn.Module):
-      def __init__(self, in_channels, kernel_size=5, bias=False, level=1):
+      def __init__(self, in_channels, kernel_size=5, bias=False, level=1, mode='bilinear'):
           super().__init__()
           self.level = level
+          self.mode = mode
           kwargs = {
               'in_channels': in_channels, 
               'out_channels': in_channels, 
@@ -39,7 +40,7 @@
   
           x = 0
           for conv, (f, s) in zip(self.convs, reversed(features)):
-              x = nn.functional.interpolate(conv(f + x), size=s, mode='bilinear')
+              x = nn.functional.interpolate(conv(f + x), size=s, mode=self.mode)
           return self.convs[self.level](i + x)
   ```
 </details>
@@ -48,7 +49,7 @@
 ## Abstract
 
 This paper introduces RecConv, a recursive decomposition strategy that efficiently constructs multi-frequency representations using small-kernel convolutions. 
-RecConv establishes a linear relationship between parameter growth and decomposing levels which determines the effective kernel size $k\times 2^\ell$ for a base kernel $k$ and $\ell$ levels of decomposition, while maintaining constant FLOPs regardless of the ERF expansion. 
+RecConv establishes a linear relationship between parameter growth and decomposing levels which determines the effective receptive field $k\times 2^\ell$ for a base kernel $k$ and $\ell$ levels of decomposition, while maintaining constant FLOPs regardless of the ERF expansion. 
 Specifically, RecConv achieves a parameter expansion of only $\ell+2$ times and a maximum FLOPs increase of $5/3$ times, compared to the exponential growth ($4^\ell$) of standard and depthwise convolutions.
 RecNeXt-M3 outperforms RepViT-M1.1 by 1.9 $AP^{box}$ on COCO with similar FLOPs.
 This innovation provides a promising avenue towards designing efficient and compact networks across various modalities.
@@ -61,18 +62,19 @@ This innovation provides a promising avenue towards designing efficient and comp
   <summary>
   <span style="font-size: larger; ">Conclusion</span>
   </summary>
-    This paper introduces a straightforward and versatile recursive decomposition strategy that leverages small-kernel convolutions to construct multi-frequency representations, establishing a linear relationship between parameter growth and decomposition levels.
-    This innovation guarantees that the computational complexity at each decomposition level follows a geometric progression, diminishing exponentially with increasing depth.
-    This recursive design is compatible with various operations and can be extended to other modalities, though this study focuses on vision tasks using basic functions.
-    Leveraging this approach, we construct RecConv as a plug-and-play module that can be seamlessly integrated into existing computer vision architectures.
-    To the best of our knowledge, this is the first effective convolution kernel up to $80 \times 80$ for resource-constrained vision tasks.
-    Building on RecConv we introduce RecNeXt, an efficient large-kernel vision backbone optimized towards resource-constrained scenarios.
-    Extensive experiments across multiple vision benchmarks demonstrate RecNeXt's superiority over current leading approaches without relying on structural reparameterization or neural architecture search.
+    This paper introduces a simple yet flexible recursive decomposition strategy using small-kernel convolutions to construct multi-frequency representations, maintaining linear parameter growth with decomposition levels while ensuring computational complexity decreases exponentially (following geometric progression). 
+    Leveraging this framework, we construct RecConv as a plug-and-play module seamlessly integrable into existing vision architectures. 
+    To the best of our knowledge, this is the first attempt with effective receptive field up to <b>80 x 80</b> for resource-constrained vision tasks. 
+    Building on RecConv, we present RecNeXt, an efficient large-kernel vision backbone optimized towards resource-limited scenarios. 
+    We introduce two series of models: the <b>A</b> series uses linear attention and nearest interpolation, while the <b>M</b> series employs convolution and bilinear interpolation for simplicity and broader hardware compatibility (e.g., to address sub-optimal nearest interpolation support in some iOS versions). 
+    Extensive benchmarks demonstrate RecNeXt’s competitive performance over current leading approaches without requiring structural reparameterization or neural architecture search.
 </details>
 
 <br/>
 
 **UPDATES** 🔥
+- **2025/06/27**: Added **A** series code and logs, replacing convolution with linear attention.
+- **2025/03/19**: Added more ablation study results, including using attention with RecConv design.
 - **2025/01/02**: Uploaded checkpoints and training logs of RecNeXt-M0.
 - **2024/12/29**: Uploaded checkpoints and training logs of RecNeXt-M1 - M5.
 
@@ -92,6 +94,12 @@ We report the top-1 accuracy on ImageNet-1K with and without distillation using 
 | M3    | 80.9 \| 79.6 |  8.2M  | 1.4G |  1.6ms  | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m3_distill_300e.pth) \| [norm](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m3_without_distill_300e.pth) | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m3_distill_300e_fused.pt) \| [norm](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m3_without_distill_300e_fused.pt) | [dist](./logs/distill/recnext_m3_distill_300e.txt) \| [norm](./logs/normal/recnext_m3_without_distill_300e.txt) | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m3_distill_300e_224.mlmodel) |
 | M4    | 82.5 \| 81.1 | 14.1M  | 2.4G |  2.4ms  | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m4_distill_300e.pth) \| [norm](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m4_without_distill_300e.pth) | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m4_distill_300e_fused.pt) \| [norm](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m4_without_distill_300e_fused.pt) | [dist](./logs/distill/recnext_m4_distill_300e.txt) \| [norm](./logs/normal/recnext_m4_without_distill_300e.txt) | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m4_distill_300e_224.mlmodel) |
 | M5    | 83.3 \| 81.6 | 22.9M  | 4.7G |  3.4ms  | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m5_distill_300e.pth) \| [norm](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m5_without_distill_300e.pth) | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m5_distill_300e_fused.pt) \| [norm](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m5_without_distill_300e_fused.pt) | [dist](./logs/distill/recnext_m5_distill_300e.txt) \| [norm](./logs/normal/recnext_m5_without_distill_300e.txt) | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m5_distill_300e_224.mlmodel) |
+| A0    | 75.0 \| 73.6 |  2.8M  | 0.4G |  1.4ms  | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_a0_distill_300e.pth) \| [norm](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_a0_without_distill_300e.pth) | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_a0_distill_300e_fused.pt) \| [norm](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_a0_without_distill_300e_fused.pt) | [dist](./logs/distill/recnext_a0_distill_300e.txt) \| [norm](./logs/normal/recnext_a0_without_distill_300e.txt) | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_a0_distill_300e_224.mlmodel) |
+| A1    | 79.6 \| 78.3 |  5.9M  | 0.9G |  1.9ms  | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_a1_distill_300e.pth) \| [norm](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_a1_without_distill_300e.pth) | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_a1_distill_300e_fused.pt) \| [norm](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_a1_without_distill_300e_fused.pt) | [dist](./logs/distill/recnext_a1_distill_300e.txt) \| [norm](./logs/normal/recnext_a1_without_distill_300e.txt) | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_a1_distill_300e_224.mlmodel) |
+| A2    | 80.8 \| 79.6 |  7.9M  | 1.2G |  2.2ms  | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_a2_distill_300e.pth) \| [norm](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_a2_without_distill_300e.pth) | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_a2_distill_300e_fused.pt) \| [norm](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_a2_without_distill_300e_fused.pt) | [dist](./logs/distill/recnext_a2_distill_300e.txt) \| [norm](./logs/normal/recnext_a2_without_distill_300e.txt) | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_a2_distill_300e_224.mlmodel) |
+| A3    | 81.1 \| 80.1 |  9.0M  | 1.4G |  2.4ms  | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_a3_distill_300e.pth) \| [norm](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_a3_without_distill_300e.pth) | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_a3_distill_300e_fused.pt) \| [norm](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_a3_without_distill_300e_fused.pt) | [dist](./logs/distill/recnext_a3_distill_300e.txt) \| [norm](./logs/normal/recnext_a3_without_distill_300e.txt) | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_a3_distill_300e_224.mlmodel) |
+| A4    | 82.5 \| 81.6 | 15.8M  | 2.4G |  3.6ms  | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_a4_distill_300e.pth) \| [norm](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_a4_without_distill_300e.pth) | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_a4_distill_300e_fused.pt) \| [norm](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_a4_without_distill_300e_fused.pt) | [dist](./logs/distill/recnext_a4_distill_300e.txt) \| [norm](./logs/normal/recnext_a4_without_distill_300e.txt) | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_a4_distill_300e_224.mlmodel) |
+| A5    | 83.5 \| 83.1 | 25.7M  | 4.7G |  5.6ms  | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_a5_distill_300e.pth) \| [norm](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_a5_without_distill_300e.pth) | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_a5_distill_300e_fused.pt) \| [norm](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_a5_without_distill_300e_fused.pt) | [dist](./logs/distill/recnext_a5_distill_300e.txt) \| [norm](./logs/normal/recnext_a5_without_distill_300e.txt) | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_a5_distill_300e_224.mlmodel) |
 
 
 ```bash
@@ -105,6 +113,12 @@ fd txt logs/distill -x sh -c 'printf "%.1f %s\n" "$(jq -s "map(.test_acc1) | max
   </summary>
 
 ```
+75.0 logs/distill/recnext_a0_distill_300e.txt
+79.6 logs/distill/recnext_a1_distill_300e.txt
+80.8 logs/distill/recnext_a2_distill_300e.txt
+81.1 logs/distill/recnext_a3_distill_300e.txt
+82.5 logs/distill/recnext_a4_distill_300e.txt
+83.5 logs/distill/recnext_a5_distill_300e.txt
 74.7 logs/distill/recnext_m0_distill_300e.txt
 79.2 logs/distill/recnext_m1_distill_300e.txt
 80.3 logs/distill/recnext_m2_distill_300e.txt
@@ -125,12 +139,20 @@ fd txt logs/normal -x sh -c 'printf "%.1f %s\n" "$(jq -s "map(.test_acc1) | max"
   </summary>
 
 ```
+73.6 logs/normal/recnext_a0_without_distill_300e.txt
+78.3 logs/normal/recnext_a1_without_distill_300e.txt
+79.6 logs/normal/recnext_a2_without_distill_300e.txt
+80.1 logs/normal/recnext_a3_without_distill_300e.txt
+81.6 logs/normal/recnext_a4_without_distill_300e.txt
+83.1 logs/normal/recnext_a5_without_distill_300e.txt
 73.2 logs/normal/recnext_m0_without_distill_300e.txt
 78.0 logs/normal/recnext_m1_without_distill_300e.txt
 79.2 logs/normal/recnext_m2_without_distill_300e.txt
 79.6 logs/normal/recnext_m3_without_distill_300e.txt
 81.1 logs/normal/recnext_m4_without_distill_300e.txt
 81.6 logs/normal/recnext_m5_without_distill_300e.txt
+81.4 logs/normal/z_drop_path_recnext_m4_without_distill_300e.txt
+82.9 logs/normal/z_drop_path_recnext_m5_without_distill_300e.txt
 ```
 </details>
 
@@ -188,6 +210,48 @@ RecNeXt-M4
 RecNeXt-M5
 </summary>
 <img src="./figures/latency/recnext_m5_224x224.png" alt="recnext_m5">
+</details>
+
+<details>
+<summary>
+RecNeXt-A0
+</summary>
+<img src="./figures/latency/recnext_a0_224x224.png" alt="recnext_a0">
+</details>
+
+<details>
+<summary>
+RecNeXt-A1
+</summary>
+<img src="./figures/latency/recnext_a1_224x224.png" alt="recnext_a1">
+</details>
+
+<details>
+<summary>
+RecNeXt-A2
+</summary>
+<img src="./figures/latency/recnext_a2_224x224.png" alt="recnext_a2">
+</details>
+
+<details>
+<summary>
+RecNeXt-A3
+</summary>
+<img src="./figures/latency/recnext_a3_224x224.png" alt="recnext_a3">
+</details>
+
+<details>
+<summary>
+RecNeXt-A4
+</summary>
+<img src="./figures/latency/recnext_a4_224x224.png" alt="recnext_a4">
+</details>
+
+<details>
+<summary>
+RecNeXt-A5
+</summary>
+<img src="./figures/latency/recnext_a5_224x224.png" alt="recnext_a5">
 </details>
 
 Tips: export the model to Core ML model
@@ -276,7 +340,9 @@ python publish.py --model_name recnext_m1 --checkpoint_path pretrain/checkpoint_
 | RecNeXt-M3 |  41.7  |    63.4     |    45.4     |  38.6  |    60.5     |    41.4     |  5.2ms  | [M3](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m3_coco.pth) | [M3](./detection/logs/recnext_m3_coco.json) |
 | RecNeXt-M4 |  43.5  |    64.9     |    47.7     |  39.7  |    62.1     |    42.4     |  7.6ms  | [M4](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m4_coco.pth) | [M4](./detection/logs/recnext_m4_coco.json) |
 | RecNeXt-M5 |  44.6  |    66.3     |    49.0     |  40.6  |    63.5     |    43.5     | 12.4ms  | [M5](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m5_coco.pth) | [M5](./detection/logs/recnext_m5_coco.json) |
-
+| RecNeXt-A3 |  42.1  |    64.1     |    46.2     |  38.8  |    61.1     |    41.6     |  8.3ms  | [A3](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_a3_coco.pth) | [A3](./detection/logs/recnext_a3_coco.json) |
+| RecNeXt-A4 |  43.5  |    65.4     |    47.6     |  39.8  |    62.4     |    42.9     | 14.0ms  | [A4](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_a4_coco.pth) | [A4](./detection/logs/recnext_a4_coco.json) |
+| RecNeXt-A5 |  44.4  |    66.3     |    48.9     |  40.3  |    63.3     |    43.4     | 25.3ms  | [A5](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_a5_coco.pth) | [A5](./detection/logs/recnext_a5_coco.json) |
 ```bash
 # this script is used to validate the detection results
 fd json detection/logs -x sh -c 'printf "%.1f %s\n" "$(tail -n +2 {} | jq -s "map(.bbox_mAP) | max * 100")" "{}"' | sort -k2
@@ -288,6 +354,9 @@ fd json detection/logs -x sh -c 'printf "%.1f %s\n" "$(tail -n +2 {} | jq -s "ma
   </summary>
 
 ```
+42.1 detection/logs/recnext_a3_coco.json
+43.5 detection/logs/recnext_a4_coco.json
+44.4 detection/logs/recnext_a5_coco.json
 41.7 detection/logs/recnext_m3_coco.json
 43.5 detection/logs/recnext_m4_coco.json
 44.6 detection/logs/recnext_m5_coco.json
@@ -301,7 +370,9 @@ fd json detection/logs -x sh -c 'printf "%.1f %s\n" "$(tail -n +2 {} | jq -s "ma
 | RecNeXt-M3 | 41.0 |  5.6ms  | [M3](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m3_ade20k.pth) | [M3](./segmentation/logs/recnext_m3_ade20k.json) |
 | RecNeXt-M4 | 43.6 |  7.2ms  | [M4](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m4_ade20k.pth) | [M4](./segmentation/logs/recnext_m4_ade20k.json) |
 | RecNeXt-M5 | 46.0 | 12.4ms  | [M5](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m5_ade20k.pth) | [M5](./segmentation/logs/recnext_m5_ade20k.json) |
-
+| RecNeXt-A3 | 41.9 |  8.4ms  | [A3](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_a3_ade20k.pth) | [A3](./segmentation/logs/recnext_a3_ade20k.json) |
+| RecNeXt-A4 | 43.0 | 14.0ms  | [A4](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_a4_ade20k.pth) | [A4](./segmentation/logs/recnext_a4_ade20k.json) |
+| RecNeXt-A5 | 46.5 | 25.3ms  | [A5](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_a5_ade20k.pth) | [A5](./segmentation/logs/recnext_a5_ade20k.json) |
 ```bash
 # this script is used to validate the segmentation results
 fd json segmentation/logs -x sh -c 'printf "%.1f %s\n" "$(tail -n +2 {} | jq -s "map(.mIoU) | max * 100")" "{}"' | sort -k2
@@ -313,6 +384,9 @@ fd json segmentation/logs -x sh -c 'printf "%.1f %s\n" "$(tail -n +2 {} | jq -s 
   </summary>
 
 ```
+41.9 segmentation/logs/recnext_a3_ade20k.json
+43.0 segmentation/logs/recnext_a4_ade20k.json
+46.5 segmentation/logs/recnext_a5_ade20k.json
 41.0 segmentation/logs/recnext_m3_ade20k.json
 43.6 segmentation/logs/recnext_m4_ade20k.json
 46.0 segmentation/logs/recnext_m5_ade20k.json
@@ -338,7 +412,9 @@ logs/ablation
 │   ├── <a style="text-decoration:none" href="./logs/ablation/224/recnext_m1_120e_224x224_bxb_7541.txt">recnext_m1_120e_224x224_bxb_7541.txt</a>
 │   ├── <a style="text-decoration:none" href="./logs/ablation/224/recnext_m1_120e_224x224_rec_3x3_7548.txt">recnext_m1_120e_224x224_rec_3x3_7548.txt</a>
 │   ├── <a style="text-decoration:none" href="./logs/ablation/224/recnext_m1_120e_224x224_rec_5x5_7603.txt">recnext_m1_120e_224x224_rec_5x5_7603.txt</a>
-│   └── <a style="text-decoration:none" href="./logs/ablation/224/recnext_m1_120e_224x224_rec_7x7_7567.txt">recnext_m1_120e_224x224_rec_7x7_7567.txt</a>
+│   ├── <a style="text-decoration:none" href="./logs/ablation/224/recnext_m1_120e_224x224_rec_7x7_7567.txt">recnext_m1_120e_224x224_rec_7x7_7567.txt</a>
+│   ├── <a style="text-decoration:none" href="./logs/ablation/224/recnext_m1_120e_224x224_rec_7x7_nearest_7571.txt">recnext_m1_120e_224x224_rec_7x7_nearest_7571.txt</a>
+│   └── <a style="text-decoration:none" href="./logs/ablation/224/recnext_m1_120e_224x224_rec_7x7_unpool_7548.txt">recnext_m1_120e_224x224_rec_7x7_unpool_7548.txt</a>
 └── 384
     ├── <a style="text-decoration:none" href="./logs/ablation/384/recnext_m1_120e_384x384_3x3_7635.txt">recnext_m1_120e_384x384_3x3_7635.txt</a>
     ├── <a style="text-decoration:none" href="./logs/ablation/384/recnext_m1_120e_384x384_7x7_7742.txt">recnext_m1_120e_384x384_7x7_7742.txt</a>
@@ -370,6 +446,8 @@ fd txt logs/ablation -x sh -c 'printf "%.2f %s\n" "$(jq -s "map(.test_acc1) | ma
 75.48 logs/ablation/224/recnext_m1_120e_224x224_rec_3x3_7548.txt
 76.03 logs/ablation/224/recnext_m1_120e_224x224_rec_5x5_7603.txt
 75.67 logs/ablation/224/recnext_m1_120e_224x224_rec_7x7_7567.txt
+75.71 logs/ablation/224/recnext_m1_120e_224x224_rec_7x7_nearest_7571.txt
+75.48 logs/ablation/224/recnext_m1_120e_224x224_rec_7x7_unpool_7548.txt
 76.35 logs/ablation/384/recnext_m1_120e_384x384_3x3_7635.txt
 77.42 logs/ablation/384/recnext_m1_120e_384x384_7x7_7742.txt
 78.00 logs/ablation/384/recnext_m1_120e_384x384_bxb_7800.txt
@@ -489,12 +567,57 @@ class RecConv2d(nn.Module):
 ```
 </details>
 
+### RecConv Beyond
+
+We apply RecConv to [MLLA](https://github.com/LeapLabTHU/MLLA) small variants, replacing linear attention and downsampling layers. 
+Result in higher throughput and less training memory usage.
+
+<pre>
+mlla/logs
+├── 1_mlla_nano
+│   ├── <a style="text-decoration:none" href="./mlla/logs/1_mlla_nano/01_baseline.txt">01_baseline.txt</a>
+│   ├── <a style="text-decoration:none" href="./mlla/logs/1_mlla_nano/02_recconv_5x5_conv_trans.txt">02_recconv_5x5_conv_trans.txt</a>
+│   ├── <a style="text-decoration:none" href="./mlla/logs/1_mlla_nano/03_recconv_5x5_nearest_interp.txt">03_recconv_5x5_nearest_interp.txt</a>
+│   ├── <a style="text-decoration:none" href="./mlla/logs/1_mlla_nano/04_recattn_nearest_interp.txt">04_recattn_nearest_interp.txt</a>
+│   └── <a style="text-decoration:none" href="./mlla/logs/1_mlla_nano/05_recattn_nearest_interp_simplify.txt">05_recattn_nearest_interp_simplify.txt</a>
+└── 2_mlla_mini
+    ├── <a style="text-decoration:none" href="./mlla/logs/2_mlla_mini/01_baseline.txt">01_baseline.txt</a>
+    ├── <a style="text-decoration:none" href="./mlla/logs/2_mlla_mini/02_recconv_5x5_conv_trans.txt">02_recconv_5x5_conv_trans.txt</a>
+    ├── <a style="text-decoration:none" href="./mlla/logs/2_mlla_mini/03_recconv_5x5_nearest_interp.txt">03_recconv_5x5_nearest_interp.txt</a>
+    ├── <a style="text-decoration:none" href="./mlla/logs/2_mlla_mini/04_recattn_nearest_interp.txt">04_recattn_nearest_interp.txt</a>
+    └── <a style="text-decoration:none" href="./mlla/logs/2_mlla_mini/05_recattn_nearest_interp_simplify.txt">05_recattn_nearest_interp_simplify.txt</a>
+</pre>
+
+
+```bash
+# this script is used to validate the ablation results
+fd txt mlla/logs -x sh -c 'printf "%.2f %s\n" "$(rg -N -I -U -o "EPOCH.*\n.*Acc@1 (\d+\.\d+)" -r "\$1" {} | sort -n | tail -1)" "{}"' | sort -k2
+```
+
+<details>
+  <summary>
+  <span>output</span>
+  </summary>
+
+```
+76.26 mlla/logs/1_mlla_nano/01_baseline.txt
+77.09 mlla/logs/1_mlla_nano/02_recconv_5x5_conv_trans.txt
+77.14 mlla/logs/1_mlla_nano/03_recconv_5x5_nearest_interp.txt
+76.53 mlla/logs/1_mlla_nano/04_recattn_nearest_interp.txt
+77.28 mlla/logs/1_mlla_nano/05_recattn_nearest_interp_simplify.txt
+82.27 mlla/logs/2_mlla_mini/01_baseline.txt
+82.06 mlla/logs/2_mlla_mini/02_recconv_5x5_conv_trans.txt
+81.94 mlla/logs/2_mlla_mini/03_recconv_5x5_nearest_interp.txt
+82.08 mlla/logs/2_mlla_mini/04_recattn_nearest_interp.txt
+82.16 mlla/logs/2_mlla_mini/05_recattn_nearest_interp_simplify.txt
+```
+</details>
+
 ## Limitations
 
-1. The **scalability** of RecNeXt lags behind the SOTA lightweight models without knowledge distillation, where larger variants experience performance saturation and increased latency.
-2. RecNeXt exhibits the lowest **throughput** among models of comparable parameter size due to extensive use of bilinear interpolation, which can be mitigated by employing transposed convolution.
-3. The recursive decomposition may introduce **numerical instability** during mixed precision training, which can be alleviated by using fixed-point or BFloat16 arithmetic.
-4. **Compatibility issues** with bilinear interpolation and transposed convolution on certain iOS versions may also result in performance degradation.
+1. RecNeXt exhibits the lowest **throughput** among models of comparable parameter size due to extensive use of bilinear interpolation, which can be mitigated by employing transposed convolution.
+2. The recursive decomposition may introduce **numerical instability** during mixed precision training, which can be alleviated by using fixed-point or BFloat16 arithmetic.
+3. **Compatibility issues** with bilinear interpolation and transposed convolution on certain iOS versions may also result in performance degradation.
 
 ## Acknowledgement
 

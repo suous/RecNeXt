@@ -1,14 +1,15 @@
 import torch
 import torch.nn as nn
 
-from timm.layers import trunc_normal_
+from timm.layers import trunc_normal_, DropPath
 from timm.models import register_model, create_model, build_model_with_cfg
 
 
 class RecConv2d(nn.Module):
-    def __init__(self, in_channels, kernel_size=5, bias=False, level=2):
+    def __init__(self, in_channels, kernel_size=5, bias=False, level=2, mode='bilinear'):
         super().__init__()
         self.level = level
+        self.mode = mode
         kwargs = {
             'in_channels': in_channels, 
             'out_channels': in_channels, 
@@ -29,7 +30,7 @@ class RecConv2d(nn.Module):
 
         x = 0
         for conv, (f, s) in zip(self.convs, reversed(features)):
-            x = nn.functional.interpolate(conv(f + x), size=s, mode='bilinear')
+            x = nn.functional.interpolate(conv(f + x), size=s, mode=self.mode)
         return self.convs[self.level](i + x)
 
     '''
@@ -47,7 +48,7 @@ class RecConv2d(nn.Module):
             if l == self.level and isinstance(x, torch.Tensor):
                 x = conv(i + x)
             else:
-                x = nn.functional.interpolate(conv(features[l][0] + x), size=features[l][1], mode='bilinear')
+                x = nn.functional.interpolate(conv(features[l][0] + x), size=features[l][1], mode=self.mode)
         return x
     '''
 
@@ -151,9 +152,10 @@ class MetaNeXtBlock(nn.Module):
         self.token_mixer = RecConv2d(in_channels, level=4-stage, kernel_size=5) 
         self.norm = nn.BatchNorm2d(in_channels)
         self.channel_mixer = mlp(in_channels, in_channels * mlp_ratio, act_layer=act_layer)
+        self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
 
     def forward(self, x):
-        return x + self.channel_mixer(self.norm(self.token_mixer(x)))
+        return x + self.drop_path(self.channel_mixer(self.norm(self.token_mixer(x))))
 
 
 class Downsample(nn.Module):
@@ -317,12 +319,13 @@ def recnext_m3(pretrained=False, **kwargs):
 
 @register_model
 def recnext_m4(pretrained=False, **kwargs):
-    model_args = dict(embed_dim=(64, 128, 256, 512), depth=(5, 5, 25, 4))
+    # Use drop path when trained without knowledge distillation fixed performance saturation problem.
+    model_args = dict(embed_dim=(64, 128, 256, 512), depth=(5, 5, 25, 4), drop_path_rate=0.2)
     return _create_recnext("recnext_m4", pretrained=pretrained, **dict(model_args, **kwargs))
 
 @register_model
 def recnext_m5(pretrained=False, **kwargs):
-    model_args = dict(embed_dim=(80, 160, 320, 640), depth=(7, 7, 35, 2))
+    model_args = dict(embed_dim=(80, 160, 320, 640), depth=(7, 7, 35, 2), drop_path_rate=0.3)
     return _create_recnext("recnext_m5", pretrained=pretrained, **dict(model_args, **kwargs))
 
 
@@ -357,14 +360,45 @@ if __name__ == "__main__":
     except ModuleNotFoundError:
         pass
 
+
+'''
+# downsample and upsample through maxpool and maxunpool
+# with higher gpu throughput and less parameters, but not coreml and onnx friendly
+class RecConv2d(nn.Module):
+    def __init__(self, in_channels, kernel_size=5, bias=False, level=2):
+        super().__init__()
+        self.level = level
+        kwargs = {
+            'in_channels': in_channels,
+            'out_channels': in_channels,
+            'groups': in_channels,
+            'kernel_size': kernel_size,
+            'padding': kernel_size // 2,
+            'bias': bias,
+        }
+        self.convs = nn.ModuleList([nn.Conv2d(**kwargs) for _ in range(level+1)])
+
+    def forward(self, x):
+        i = x
+        features = []
+        for _ in range(self.level):
+            (x, d), s = nn.functional.max_pool2d(x, kernel_size=2, stride=2, return_indices=True), x.shape[2:]
+            features.append((x, d, s))
+
+        x = 0
+        for conv, (f, d, s) in zip(self.convs, reversed(features)):
+            x = nn.functional.max_unpool2d(conv(f + x), indices=d, kernel_size=2, stride=2, output_size=s)
+        return self.convs[self.level](i + x)
+'''
+
 '''
 # bilinear upsample can be replaced by convtranspose2d
 # element-wise addition and be replaced by hadamard product
-from operator import mul, add
+import operator
 
 
 class RecConv2d(nn.Module):
-    def __init__(self, in_channels, kernel_size=5, bias=False, level=2, act_layer=None, agg=add):
+    def __init__(self, in_channels, kernel_size=5, bias=False, level=2, act_layer=None, agg=operator.add):
         super().__init__()
         self.level = level
         self.agg = agg
@@ -399,9 +433,10 @@ class RecConv2d(nn.Module):
 '''
 # recursive decomposition on both spatial and channel dimensions
 class RecConv2d(nn.Module):
-    def __init__(self, in_channels, kernel_size=5, bias=False, level=2):
+    def __init__(self, in_channels, kernel_size=5, bias=False, level=2, mode='bilinear'):
         super().__init__()
         self.level = level
+        self.mode = mode
         kwargs = {'kernel_size': kernel_size, 'padding': kernel_size // 2, 'bias': bias}
         downs = []
         for l in range(level):
@@ -423,7 +458,7 @@ class RecConv2d(nn.Module):
             features.append((r, s))
 
         for conv, (r, s) in zip(self.convs, reversed(features)):
-            x = torch.cat([r, nn.functional.interpolate(conv(x), size=s, mode='bilinear')], dim=1)
+            x = torch.cat([r, nn.functional.interpolate(conv(x), size=s, mode=self.mode)], dim=1)
         return self.convs[self.level](x)
 '''
 
@@ -512,3 +547,4 @@ class RecConv2d(nn.Module):
             x = torch.cat([r, up(conv(x))], dim=1)
         return self.convs[self.level](x)
 '''
+
