@@ -8,6 +8,9 @@ Segmentation on ADE20K is implemented based on [MMSegmentation](https://github.c
 | RecNeXt-M3 |   41.0   |  5.6ms  | [M3](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m3_ade20k.pth) | [M3](./logs/recnext_m3_ade20k.json) |
 | RecNeXt-M4 |   43.6   |  7.2ms  | [M4](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m4_ade20k.pth) | [M4](./logs/recnext_m4_ade20k.json) |
 | RecNeXt-M5 |   46.0   | 12.4ms  | [M5](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m5_ade20k.pth) | [M5](./logs/recnext_m5_ade20k.json) |
+| RecNeXt-A3 |   41.9   |  8.4ms  | [A3](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_a3_ade20k.pth) | [A3](./logs/recnext_a3_ade20k.json) |
+| RecNeXt-A4 |   43.0   | 14.0ms  | [A4](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_a4_ade20k.pth) | [A4](./logs/recnext_a4_ade20k.json) |
+| RecNeXt-A5 |   46.5   | 25.3ms  | [A5](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_a5_ade20k.pth) | [A5](./logs/recnext_a5_ade20k.json) |
 
 The backbone latency is measured with image crops of 512x512 on iPhone 12 by Core ML Tools.
 
