@@ -1,0 +1,83 @@
+# More Comparisons
+
+![Classification](./figures/classification.png)
+
+We evaluate **T**, **S**, **B** variants on ImageNet-1K, comparing them against the SOTA efficient architecture, [LSNet](https://github.com/jameslahm/lsnet). 
+The NPU latency is measured on an iPhone 13 with models compiled by Core ML Tools. 
+The CPU latency is accessed on a Quad-core ARM Cortex-A57 processor in ONNX format. 
+And the throughput is tested on an Nvidia RTX3090 with maximum power-of-two batch size that fits in memory. 
+**∗** denotes hard knowledge distillation using the RegNetY-16GF as the teacher model.
+
+> We change the original triton code of [SKA module](https://github.com/THU-MIG/lsnet/blob/master/model/ska.py) to pytorch code for ARM CPU latency measurement.
+
+```python
+class SKA(nn.Module):
+    def __init__(self, sks=3):
+        super().__init__()
+        self.sks = sks
+        self.pad = sks // 2
+        
+    def forward(self, x, w):
+        B, C, H, W = x.shape
+        x = nn.functional.unfold(x, self.sks, padding=self.pad)       # [B, C*K*K, H*W]
+        x = x.view(B, C, -1, H, W)                                    # [B, C, K*K, H, W]  
+        return (x * w.repeat(1, C // w.shape[1], 1, 1, 1)).sum(dim=2) # [B, C, K*K, H, W] 
+```
+
+| Model |    Top-1     | Params | MACs | Latency |                                                                                               Ckpt                                                                                               |                                                                                                   Fused                                                                                                    |                                                      Log                                                      |                                              Core ML                                               |
+|:------|:------------:|:------:|:----:|:-------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------------:|:--------------------------------------------------------------------------------------------------:|
+| T     | 76.6 \| 75.1 | 12.1M  | 0.3G |  1.8ms  | [dist](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_t_distill_300e.pth) \| [norm](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_t_without_distill_300e.pth) | [dist](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_t_distill_300e_fused.pt) \| [norm](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_t_without_distill_300e_fused.pt) | [dist](./logs/distill/recnext_t_distill_300e.txt) \| [norm](./logs/normal/recnext_t_without_distill_300e.txt) | [dist](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_t_distill_300e_224.mlmodel) |
+| S     | 79.6 \| 78.3 | 15.8M  | 0.7G |  2.0ms  | [dist](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_s_distill_300e.pth) \| [norm](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_s_without_distill_300e.pth) | [dist](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_s_distill_300e_fused.pt) \| [norm](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_s_without_distill_300e_fused.pt) | [dist](./logs/distill/recnext_s_distill_300e.txt) \| [norm](./logs/normal/recnext_s_without_distill_300e.txt) | [dist](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_s_distill_300e_224.mlmodel) |
+| B     | 81.4 \| 80.3 | 19.3M  | 1.1G |  2.5ms  | [dist](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_b_distill_300e.pth) \| [norm](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_b_without_distill_300e.pth) | [dist](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_b_distill_300e_fused.pt) \| [norm](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_b_without_distill_300e_fused.pt) | [dist](./logs/distill/recnext_b_distill_300e.txt) \| [norm](./logs/normal/recnext_b_without_distill_300e.txt) | [dist](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_b_distill_300e_224.mlmodel) |
+
+
+```bash
+# this script is used to validate the distillation results
+fd txt logs -x sh -c 'printf "%.1f %s\n" "$(jq -s "map(.test_acc1) | max" {})" "{}"' | sort -k2
+```
+
+<details>
+  <summary>
+  <span>output</span>
+  </summary>
+
+```
+81.4 logs/distill/recnext_b_distill_300e.txt
+79.6 logs/distill/recnext_s_distill_300e.txt
+76.6 logs/distill/recnext_t_distill_300e.txt
+80.3 logs/normal/recnext_b_without_distill_300e.txt
+78.3 logs/normal/recnext_s_without_distill_300e.txt
+75.1 logs/normal/recnext_t_without_distill_300e.txt
+```
+</details>
+
+## Latency Measurement
+
+The latency reported in RecNeXt for iPhone 13 (iOS 18) uses the benchmark tool from [XCode 14](https://developer.apple.com/videos/play/wwdc2022/10027/).
+
+<details>
+<summary>
+RecNeXt-T
+</summary>
+<img src="./figures/latency/recnext_t_224x224.png" alt="recnext_t">
+</details>
+
+<details>
+<summary>
+RecNeXt-S
+</summary>
+<img src="./figures/latency/recnext_s_224x224.png" alt="recnext_s">
+</details>
+<details>
+
+<summary>
+RecNeXt-B
+</summary>
+<img src="./figures/latency/recnext_b_224x224.png" alt="recnext_b">
+</details>
+
+## Robustness Evaluation
+
+Robustness evaluation on ImageNet-C, ImageNet-A, ImageNet-R, and ImageNet-Sketch.
+
+![Robustness](./figures/robust.png)

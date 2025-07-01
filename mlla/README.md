@@ -1,5 +1,7 @@
 # Ablation Study
 
+![Ablation](./figures/ablation.png)
+
 <pre>
 logs
 ├── 1_mlla_nano

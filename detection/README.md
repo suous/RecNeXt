@@ -4,13 +4,13 @@ Detection and instance segmentation on MS COCO 2017 is implemented based on [MMD
 
 ## Models
 | Model      | $AP^b$ | $AP_{50}^b$ | $AP_{75}^b$ | $AP^m$ | $AP_{50}^m$ | $AP_{75}^m$ | Latency |                                       Ckpt                                        |                Log                |
-|:-----------|:------:|:---:|:--:|:--:|:--:|:--:|:-------:|:---------------------------------------------------------------------------------:|:---------------------------------:|
-| RecNeXt-M3 |  41.7  | 63.4   | 45.4  | 38.6  | 60.5  | 41.4 |  5.2ms  | [M3](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m3_coco.pth) | [M3](./logs/recnext_m3_coco.json) |
-| RecNeXt-M4 |  43.5  | 64.9   | 47.7  | 39.7  | 62.1  | 42.4 |  7.6ms  | [M4](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m4_coco.pth) | [M4](./logs/recnext_m4_coco.json) |
-| RecNeXt-M5 |  44.6  | 66.3   | 49.0  | 40.6  | 63.5  | 43.5 | 12.4ms  | [M5](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m5_coco.pth) | [M5](./logs/recnext_m5_coco.json) |
-| RecNeXt-A3 |  42.1  | 64.1   | 46.2  | 38.8  | 61.1  | 41.6 |  8.4ms  | [A3](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_a3_coco.pth) | [A3](./logs/recnext_a3_coco.json) |
-| RecNeXt-A4 |  43.5  | 65.4   | 47.6  | 39.8  | 62.4  | 42.9 | 14.0ms  | [A4](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_a4_coco.pth) | [A4](./logs/recnext_a4_coco.json) |
-| RecNeXt-A5 |  44.4  | 66.3   | 48.9  | 40.3  | 63.3  | 43.4 | 25.3ms  | [A5](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_a5_coco.pth) | [A5](./logs/recnext_a5_coco.json) |
+|:-----------|:------:|:-----------:|:-----------:|:------:|:-----------:|:-----------:|:-------:|:---------------------------------------------------------------------------------:|:---------------------------------:|
+| RecNeXt-M3 |  41.7  |    63.4     |    45.4     |  38.6  |    60.5     |    41.4     |  5.2ms  | [M3](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m3_coco.pth) | [M3](./logs/recnext_m3_coco.json) |
+| RecNeXt-M4 |  43.5  |    64.9     |    47.7     |  39.7  |    62.1     |    42.4     |  7.6ms  | [M4](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m4_coco.pth) | [M4](./logs/recnext_m4_coco.json) |
+| RecNeXt-M5 |  44.6  |    66.3     |    49.0     |  40.6  |    63.5     |    43.5     | 12.4ms  | [M5](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m5_coco.pth) | [M5](./logs/recnext_m5_coco.json) |
+| RecNeXt-A3 |  42.1  |    64.1     |    46.2     |  38.8  |    61.1     |    41.6     |  8.4ms  | [A3](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_a3_coco.pth) | [A3](./logs/recnext_a3_coco.json) |
+| RecNeXt-A4 |  43.5  |    65.4     |    47.6     |  39.8  |    62.4     |    42.9     | 14.0ms  | [A4](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_a4_coco.pth) | [A4](./logs/recnext_a4_coco.json) |
+| RecNeXt-A5 |  44.4  |    66.3     |    48.9     |  40.3  |    63.3     |    43.4     | 25.3ms  | [A5](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_a5_coco.pth) | [A5](./logs/recnext_a5_coco.json) |
 
 ## Installation
 

@@ -147,7 +147,7 @@ class RecNextStem(nn.Module):
 
 
 class MetaNeXtBlock(nn.Module):
-    def __init__(self, in_channels, mlp_ratio, act_layer=nn.GELU, stage=0):
+    def __init__(self, in_channels, mlp_ratio, act_layer=nn.GELU, stage=0, drop_path=0):
         super().__init__()
         self.token_mixer = RecConv2d(in_channels, level=4-stage, kernel_size=5) 
         self.norm = nn.BatchNorm2d(in_channels)
@@ -202,10 +202,10 @@ class RecNextClassifier(nn.Module):
 
 
 class RecNextStage(nn.Module):
-    def __init__(self, in_channels, out_channels, depth, mlp_ratio, act_layer=nn.GELU, downsample=True, stage=0):
+    def __init__(self, in_channels, out_channels, depth, mlp_ratio, act_layer=nn.GELU, downsample=True, stage=0, drop_path=0):
         super().__init__()
         self.downsample = Downsample(in_channels, mlp_ratio, act_layer=act_layer) if downsample else nn.Identity()
-        self.blocks = nn.Sequential(*[MetaNeXtBlock(out_channels, mlp_ratio, act_layer=act_layer, stage=stage) for _ in range(depth)])
+        self.blocks = nn.Sequential(*[MetaNeXtBlock(out_channels, mlp_ratio, act_layer=act_layer, stage=stage, drop_path=drop_path) for _ in range(depth)])
 
     def forward(self, x):
         return self.blocks(self.downsample(x))
@@ -223,6 +223,7 @@ class RecNext(nn.Module):
         act_layer=nn.GELU,
         distillation=False,
         drop_rate=0.0,
+        drop_path=0.0,
         **kwargs
     ):
         super().__init__()
@@ -246,6 +247,7 @@ class RecNext(nn.Module):
                     act_layer=act_layer,
                     downsample=downsample,
                     stage=i,
+                    drop_path=drop_path,
                 )
             )
             stage_stride = 2 if downsample else 1
@@ -320,12 +322,12 @@ def recnext_m3(pretrained=False, **kwargs):
 @register_model
 def recnext_m4(pretrained=False, **kwargs):
     # Use drop path when trained without knowledge distillation fixed performance saturation problem.
-    model_args = dict(embed_dim=(64, 128, 256, 512), depth=(5, 5, 25, 4), drop_path_rate=0.2)
+    model_args = dict(embed_dim=(64, 128, 256, 512), depth=(5, 5, 25, 4), drop_path=0.2)
     return _create_recnext("recnext_m4", pretrained=pretrained, **dict(model_args, **kwargs))
 
 @register_model
 def recnext_m5(pretrained=False, **kwargs):
-    model_args = dict(embed_dim=(80, 160, 320, 640), depth=(7, 7, 35, 2), drop_path_rate=0.3)
+    model_args = dict(embed_dim=(80, 160, 320, 640), depth=(7, 7, 35, 2), drop_path=0.3)
     return _create_recnext("recnext_m5", pretrained=pretrained, **dict(model_args, **kwargs))
 
 
