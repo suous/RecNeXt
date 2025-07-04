@@ -2,7 +2,7 @@ import torch
 import torch.nn as nn
 
 from timm.layers import trunc_normal_, DropPath
-from timm.models import register_model, create_model, build_model_with_cfg
+from timm.models import register_model, create_model, build_model_with_cfg, generate_default_cfgs
 
 
 class RecConv2d(nn.Module):
@@ -299,36 +299,112 @@ def _create_recnext(variant, pretrained=False, **kwargs):
     return model
 
 
+def _cfg(url='', **kwargs):
+    return {
+        'url': url,
+        'num_classes': 1000,
+        'input_size': (3, 224, 224),
+        **kwargs,
+    }
+
+
+default_cfgs = generate_default_cfgs(
+    {
+        'recnext_m0.base_300e_in1k': _cfg(
+            hf_hub_id='suous/recnext_m0.base_300e_in1k',
+            tag=['base', 'without-distillation']
+        ),
+        'recnext_m1.base_300e_in1k': _cfg(
+            hf_hub_id='suous/recnext_m1.base_300e_in1k',
+            tag=['base', 'without-distillation']
+        ),
+        'recnext_m2.base_300e_in1k': _cfg(
+            hf_hub_id='suous/recnext_m2.base_300e_in1k',
+            tag=['base', 'without-distillation']
+        ),
+        'recnext_m3.base_300e_in1k': _cfg(
+            hf_hub_id='suous/recnext_m3.base_300e_in1k',
+            tag=['base', 'without-distillation']
+        ),
+        'recnext_m4.base_300e_in1k': _cfg(
+            hf_hub_id='suous/recnext_m4.base_300e_in1k',
+            tag=['base', 'without-distillation']
+        ),
+        'recnext_m5.base_300e_in1k': _cfg(
+            hf_hub_id='suous/recnext_m5.base_300e_in1k',
+            tag=['base', 'without-distillation']
+        ),
+        'recnext_m0.dist_300e_in1k': _cfg(
+            hf_hub_id='suous/recnext_m0.dist_300e_in1k',
+            tag=['dist', 'knowledge-distillation']
+        ),
+        'recnext_m1.dist_300e_in1k': _cfg(
+            hf_hub_id='suous/recnext_m1.dist_300e_in1k',
+            tag=['dist', 'knowledge-distillation']
+        ),
+        'recnext_m2.dist_300e_in1k': _cfg(
+            hf_hub_id='suous/recnext_m2.dist_300e_in1k',
+            tag=['dist', 'knowledge-distillation']
+        ),
+        'recnext_m3.dist_300e_in1k': _cfg(  
+            hf_hub_id='suous/recnext_m3.dist_300e_in1k',
+            tag=['dist', 'knowledge-distillation']
+        ),
+        'recnext_m4.dist_300e_in1k': _cfg(
+            hf_hub_id='suous/recnext_m4.dist_300e_in1k',
+            tag=['dist', 'knowledge-distillation']
+        ),
+        'recnext_m5.dist_300e_in1k': _cfg(
+            hf_hub_id='suous/recnext_m5.dist_300e_in1k',
+            tag=['dist', 'knowledge-distillation']
+        ),
+    }
+)
+
+
 @register_model
 def recnext_m0(pretrained=False, **kwargs):
+    distillation = kwargs.pop('distillation', False)
+    variant = 'dist' if distillation else 'base'
     model_args = dict(embed_dim=(40, 80, 160, 320), depth=(2, 2, 9, 1))
-    return _create_recnext("recnext_m0", pretrained=pretrained, **dict(model_args, **kwargs))
+    return _create_recnext(f'recnext_m0.{variant}_300e_in1k', pretrained=pretrained, **dict(model_args, **kwargs))
 
 @register_model
 def recnext_m1(pretrained=False, **kwargs):
+    distillation = kwargs.pop('distillation', False)
+    variant = 'dist' if distillation else 'base'
     model_args = dict(embed_dim=(48, 96, 192, 384), depth=(3, 3, 15, 2))
-    return _create_recnext("recnext_m1", pretrained=pretrained, **dict(model_args, **kwargs))
+    return _create_recnext(f'recnext_m1.{variant}_300e_in1k', pretrained=pretrained, **dict(model_args, **kwargs))
 
 @register_model
 def recnext_m2(pretrained=False, **kwargs):
+    distillation = kwargs.pop('distillation', False)
+    variant = 'dist' if distillation else 'base'
     model_args = dict(embed_dim=(56, 112, 224, 448), depth=(3, 3, 15, 2))
-    return _create_recnext("recnext_m2", pretrained=pretrained, **dict(model_args, **kwargs))
+    return _create_recnext(f'recnext_m2.{variant}_300e_in1k', pretrained=pretrained, **dict(model_args, **kwargs))
 
 @register_model
 def recnext_m3(pretrained=False, **kwargs):
+    distillation = kwargs.pop('distillation', False)
+    variant = 'dist' if distillation else 'base'
     model_args = dict(embed_dim=(64, 128, 256, 512), depth=(3, 3, 13, 2))
-    return _create_recnext("recnext_m3", pretrained=pretrained, **dict(model_args, **kwargs))
+    return _create_recnext(f'recnext_m3.{variant}_300e_in1k', pretrained=pretrained, **dict(model_args, **kwargs))
 
 @register_model
 def recnext_m4(pretrained=False, **kwargs):
-    # Use drop path when trained without knowledge distillation fixed performance saturation problem.
-    model_args = dict(embed_dim=(64, 128, 256, 512), depth=(5, 5, 25, 4), drop_path=0.2)
-    return _create_recnext("recnext_m4", pretrained=pretrained, **dict(model_args, **kwargs))
+    distillation = kwargs.pop('distillation', False)
+    variant = 'dist' if distillation else 'base'
+    drop_path = 0.0 if distillation else 0.2
+    model_args = dict(embed_dim=(64, 128, 256, 512), depth=(5, 5, 25, 4), drop_path=drop_path)
+    return _create_recnext(f'recnext_m4.{variant}_300e_in1k', pretrained=pretrained, **dict(model_args, **kwargs))
 
 @register_model
 def recnext_m5(pretrained=False, **kwargs):
-    model_args = dict(embed_dim=(80, 160, 320, 640), depth=(7, 7, 35, 2), drop_path=0.3)
-    return _create_recnext("recnext_m5", pretrained=pretrained, **dict(model_args, **kwargs))
+    distillation = kwargs.pop('distillation', False)
+    variant = 'dist' if distillation else 'base'
+    drop_path = 0.0 if distillation else 0.3
+    model_args = dict(embed_dim=(80, 160, 320, 640), depth=(7, 7, 35, 2), drop_path=drop_path)
+    return _create_recnext(f'recnext_m5.{variant}_300e_in1k', pretrained=pretrained, **dict(model_args, **kwargs))
 
 
 if __name__ == "__main__":

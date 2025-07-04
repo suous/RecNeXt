@@ -23,6 +23,7 @@ from engine import train_one_epoch, evaluate
 from losses import DistillationLoss
 
 import model
+import lsnet.model
 import utils
 
 
@@ -165,6 +166,8 @@ def get_args_parser():
                         help='start epoch')
     parser.add_argument('--eval', action='store_true',
                         help='Perform evaluation only')
+    parser.add_argument('--pretrained', action='store_true',
+                        help='Use pretrained model')
     parser.add_argument('--dist-eval', action='store_true',
                         default=False, help='Enabling distributed evaluation')
     parser.add_argument('--num_workers', default=10, type=int)
@@ -268,7 +271,7 @@ def main(args):
         args.model,
         num_classes=args.nb_classes,
         distillation=(args.distillation_type != 'none'),
-        pretrained=False,
+        pretrained=args.pretrained,
     )
     export_onnx(model, args.output_dir)
 

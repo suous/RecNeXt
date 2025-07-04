@@ -73,6 +73,7 @@ This innovation provides a promising avenue towards designing efficient and comp
 <br/>
 
 **UPDATES** 🔥
+- **2025/07/04**: Uploaded classification models to [HuggingFace](https://huggingface.co/suous)🤗.
 - **2025/07/01**: Added more comparisons with [LSNet](https://github.com/jameslahm/lsnet).
 - **2025/06/27**: Added **A** series code and logs, replacing convolution with linear attention.
 - **2025/03/19**: Added more ablation study results, including using attention with RecConv design.
@@ -93,8 +94,8 @@ We report the top-1 accuracy on ImageNet-1K with and without distillation using 
 | M1    | 79.2 \| 78.0 |  5.2M  | 0.9G |  1.4ms  | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m1_distill_300e.pth) \| [norm](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m1_without_distill_300e.pth) | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m1_distill_300e_fused.pt) \| [norm](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m1_without_distill_300e_fused.pt) | [dist](./logs/distill/recnext_m1_distill_300e.txt) \| [norm](./logs/normal/recnext_m1_without_distill_300e.txt) | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m1_distill_300e_224.mlmodel) |
 | M2    | 80.3 \| 79.2 |  6.8M  | 1.2G |  1.5ms  | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m2_distill_300e.pth) \| [norm](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m2_without_distill_300e.pth) | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m2_distill_300e_fused.pt) \| [norm](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m2_without_distill_300e_fused.pt) | [dist](./logs/distill/recnext_m2_distill_300e.txt) \| [norm](./logs/normal/recnext_m2_without_distill_300e.txt) | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m2_distill_300e_224.mlmodel) |
 | M3    | 80.9 \| 79.6 |  8.2M  | 1.4G |  1.6ms  | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m3_distill_300e.pth) \| [norm](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m3_without_distill_300e.pth) | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m3_distill_300e_fused.pt) \| [norm](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m3_without_distill_300e_fused.pt) | [dist](./logs/distill/recnext_m3_distill_300e.txt) \| [norm](./logs/normal/recnext_m3_without_distill_300e.txt) | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m3_distill_300e_224.mlmodel) |
-| M4    | 82.5 \| 81.1 | 14.1M  | 2.4G |  2.4ms  | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m4_distill_300e.pth) \| [norm](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m4_without_distill_300e.pth) | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m4_distill_300e_fused.pt) \| [norm](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m4_without_distill_300e_fused.pt) | [dist](./logs/distill/recnext_m4_distill_300e.txt) \| [norm](./logs/normal/recnext_m4_without_distill_300e.txt) | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m4_distill_300e_224.mlmodel) |
-| M5    | 83.3 \| 81.6 | 22.9M  | 4.7G |  3.4ms  | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m5_distill_300e.pth) \| [norm](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m5_without_distill_300e.pth) | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m5_distill_300e_fused.pt) \| [norm](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m5_without_distill_300e_fused.pt) | [dist](./logs/distill/recnext_m5_distill_300e.txt) \| [norm](./logs/normal/recnext_m5_without_distill_300e.txt) | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m5_distill_300e_224.mlmodel) |
+| M4    | 82.5 \| 81.4 | 14.1M  | 2.4G |  2.4ms  | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m4_distill_300e.pth) \| [norm](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m4_without_distill_300e.pth) | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m4_distill_300e_fused.pt) \| [norm](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m4_without_distill_300e_fused.pt) | [dist](./logs/distill/recnext_m4_distill_300e.txt) \| [norm](./logs/normal/recnext_m4_without_distill_300e.txt) | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m4_distill_300e_224.mlmodel) |
+| M5    | 83.3 \| 82.9 | 22.9M  | 4.7G |  3.4ms  | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m5_distill_300e.pth) \| [norm](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m5_without_distill_300e.pth) | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m5_distill_300e_fused.pt) \| [norm](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m5_without_distill_300e_fused.pt) | [dist](./logs/distill/recnext_m5_distill_300e.txt) \| [norm](./logs/normal/recnext_m5_without_distill_300e.txt) | [dist](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m5_distill_300e_224.mlmodel) |
 | A0    | 75.0 \| 73.6 |  2.8M  | 0.4G |  1.4ms  | [dist](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_a0_distill_300e.pth) \| [norm](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_a0_without_distill_300e.pth) | [dist](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_a0_distill_300e_fused.pt) \| [norm](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_a0_without_distill_300e_fused.pt) | [dist](./logs/distill/recnext_a0_distill_300e.txt) \| [norm](./logs/normal/recnext_a0_without_distill_300e.txt) | [dist](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_a0_distill_300e_224.mlmodel) |
 | A1    | 79.6 \| 78.3 |  5.9M  | 0.9G |  1.9ms  | [dist](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_a1_distill_300e.pth) \| [norm](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_a1_without_distill_300e.pth) | [dist](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_a1_distill_300e_fused.pt) \| [norm](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_a1_without_distill_300e_fused.pt) | [dist](./logs/distill/recnext_a1_distill_300e.txt) \| [norm](./logs/normal/recnext_a1_without_distill_300e.txt) | [dist](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_a1_distill_300e_224.mlmodel) |
 | A2    | 80.8 \| 79.6 |  7.9M  | 1.2G |  2.2ms  | [dist](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_a2_distill_300e.pth) \| [norm](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_a2_without_distill_300e.pth) | [dist](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_a2_distill_300e_fused.pt) \| [norm](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_a2_without_distill_300e_fused.pt) | [dist](./logs/distill/recnext_a2_distill_300e.txt) \| [norm](./logs/normal/recnext_a2_without_distill_300e.txt) | [dist](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_a2_distill_300e_224.mlmodel) |
@@ -150,10 +151,10 @@ fd txt logs/normal -x sh -c 'printf "%.1f %s\n" "$(jq -s "map(.test_acc1) | max"
 78.0 logs/normal/recnext_m1_without_distill_300e.txt
 79.2 logs/normal/recnext_m2_without_distill_300e.txt
 79.6 logs/normal/recnext_m3_without_distill_300e.txt
-81.1 logs/normal/recnext_m4_without_distill_300e.txt
-81.6 logs/normal/recnext_m5_without_distill_300e.txt
-81.4 logs/normal/z_drop_path_recnext_m4_without_distill_300e.txt
-82.9 logs/normal/z_drop_path_recnext_m5_without_distill_300e.txt
+81.4 logs/normal/recnext_m4_without_distill_300e.txt
+82.9 logs/normal/recnext_m5_without_distill_300e.txt
+81.1 logs/normal/z_without_drop_path_recnext_m4_without_distill_300e.txt
+81.6 logs/normal/z_without_drop_path_recnext_m5_without_distill_300e.txt
 ```
 </details>
 
@@ -312,6 +313,16 @@ Tips: specify your data path and model name!
 For example, to test RecNeXt-M1:
 ```
 python main.py --eval --model recnext_m1 --resume pretrain/recnext_m1_distill_300e.pth --data-path ~/imagenet
+```
+
+Use pretrained model without knowledge distillation from [HuggingFace](https://huggingface.co/suous) 🤗.
+```bash
+python main.py --eval --model recnext_m1 --data-path ~/imagenet --pretrained --distillation-type none
+```
+
+Use pretrained model with knowledge distillation from [HuggingFace](https://huggingface.co/suous) 🤗.
+```bash
+python main.py --eval --model recnext_m1 --data-path ~/imagenet --pretrained --distillation-type hard
 ```
 
 ### Fused model evaluation
