@@ -32,7 +32,6 @@ class SKA(nn.Module):
 
 
 ```bash
-# this script is used to validate the distillation results
 fd txt logs -x sh -c 'printf "%.1f %s\n" "$(jq -s "map(.test_acc1) | max" {})" "{}"' | sort -k2
 ```
 
@@ -44,10 +43,14 @@ fd txt logs -x sh -c 'printf "%.1f %s\n" "$(jq -s "map(.test_acc1) | max" {})" "
 ```
 81.4 logs/distill/recnext_b_distill_300e.txt
 79.6 logs/distill/recnext_s_distill_300e.txt
+79.5 logs/distill/recnext_s_distill_300e_share_channel.txt
 76.6 logs/distill/recnext_t_distill_300e.txt
+76.8 logs/distill/recnext_t_distill_300e_share_channel.txt
 80.3 logs/normal/recnext_b_without_distill_300e.txt
 78.3 logs/normal/recnext_s_without_distill_300e.txt
+78.3 logs/normal/recnext_s_without_distill_300e_share_channel.txt
 75.1 logs/normal/recnext_t_without_distill_300e.txt
+75.2 logs/normal/recnext_t_without_distill_300e_share_channel.txt
 ```
 </details>
 
@@ -81,3 +84,10 @@ RecNeXt-B
 Robustness evaluation on ImageNet-C, ImageNet-A, ImageNet-R, and ImageNet-Sketch.
 
 ![Robustness](./figures/robust.png)
+
+## Slightly More Efficient Architecture 
+
+Here we present a slightly more efficient architecture than our previous design. This simple framework centers around sharing channel features from the previous layers.
+Our motivation for doing so is to reduce the computational cost of token mixers and minimize feature redundancy in the final stage. Our preliminary experiments show a slight reduction in parameters and a slight increase in GPU throughput, without significant performance changes. We would greatly appreciate any helpful suggestions.
+
+![Architecture](./figures/architecture.png)

@@ -73,12 +73,15 @@ This innovation provides a promising avenue towards designing efficient and comp
 <br/>
 
 **UPDATES** 🔥
+- **2025/07/23**: Added a simple architecture, the overall design follows [LSNet](https://github.com/jameslahm/lsnet).
 - **2025/07/04**: Uploaded classification models to [HuggingFace](https://huggingface.co/suous)🤗.
 - **2025/07/01**: Added more comparisons with [LSNet](https://github.com/jameslahm/lsnet).
 - **2025/06/27**: Added **A** series code and logs, replacing convolution with linear attention.
 - **2025/03/19**: Added more ablation study results, including using attention with RecConv design.
 - **2025/01/02**: Uploaded checkpoints and training logs of RecNeXt-M0.
 - **2024/12/29**: Uploaded checkpoints and training logs of RecNeXt-M1 - M5.
+
+![LSNet Like Architecture](./lsnet/figures/architecture.png)
 
 ## Classification on ImageNet-1K
 

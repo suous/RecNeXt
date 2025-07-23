@@ -380,28 +380,28 @@ def recnext_a0(pretrained=False, **kwargs):
     distillation = kwargs.pop('distillation', False)
     variant = 'dist' if distillation else 'base'
     model_args = dict(embed_dim=(40, 80, 160, 320), depth=(2, 2, 9, 1))
-    return _create_recnext(f'recnext_a0.{variant}_300e_in1k', pretrained=pretrained, **dict(model_args, **kwargs))
+    return _create_recnext(f'recnext_a0.{variant}_300e_in1k', pretrained=pretrained, distillation=distillation, **dict(model_args, **kwargs))
 
 @register_model
 def recnext_a1(pretrained=False, **kwargs):
     distillation = kwargs.pop('distillation', False)
     variant = 'dist' if distillation else 'base'
     model_args = dict(embed_dim=(48, 96, 192, 384), depth=(3, 3, 15, 2))
-    return _create_recnext(f'recnext_a1.{variant}_300e_in1k', pretrained=pretrained, **dict(model_args, **kwargs))
+    return _create_recnext(f'recnext_a1.{variant}_300e_in1k', pretrained=pretrained, distillation=distillation, **dict(model_args, **kwargs))
 
 @register_model
 def recnext_a2(pretrained=False, **kwargs):
     distillation = kwargs.pop('distillation', False)
     variant = 'dist' if distillation else 'base'
     model_args = dict(embed_dim=(56, 112, 224, 448), depth=(3, 3, 15, 2))
-    return _create_recnext(f'recnext_a2.{variant}_300e_in1k', pretrained=pretrained, **dict(model_args, **kwargs))
+    return _create_recnext(f'recnext_a2.{variant}_300e_in1k', pretrained=pretrained, distillation=distillation, **dict(model_args, **kwargs))
 
 @register_model
 def recnext_a3(pretrained=False, **kwargs):
     distillation = kwargs.pop('distillation', False)
     variant = 'dist' if distillation else 'base'
     model_args = dict(embed_dim=(64, 128, 256, 512), depth=(3, 3, 13, 2), mlp_ratio=1.875)
-    return _create_recnext(f'recnext_a3.{variant}_300e_in1k', pretrained=pretrained, **dict(model_args, **kwargs))
+    return _create_recnext(f'recnext_a3.{variant}_300e_in1k', pretrained=pretrained, distillation=distillation, **dict(model_args, **kwargs))
 
 @register_model
 def recnext_a4(pretrained=False, **kwargs):
@@ -409,7 +409,7 @@ def recnext_a4(pretrained=False, **kwargs):
     variant = 'dist' if distillation else 'base'
     drop_path = 0.0 if distillation else 0.2
     model_args = dict(embed_dim=(64, 128, 256, 512), depth=(5, 5, 25, 4), mlp_ratio=1.875, drop_path=drop_path)
-    return _create_recnext(f'recnext_a4.{variant}_300e_in1k', pretrained=pretrained, **dict(model_args, **kwargs))
+    return _create_recnext(f'recnext_a4.{variant}_300e_in1k', pretrained=pretrained, distillation=distillation, **dict(model_args, **kwargs))
 
 @register_model
 def recnext_a5(pretrained=False, **kwargs):
@@ -417,7 +417,7 @@ def recnext_a5(pretrained=False, **kwargs):
     variant = 'dist' if distillation else 'base'
     drop_path = 0.0 if distillation else 0.3
     model_args = dict(embed_dim=(80, 160, 320, 640), depth=(7, 7, 35, 2), mlp_ratio=1.875, drop_path=drop_path)
-    return _create_recnext(f'recnext_a5.{variant}_300e_in1k', pretrained=pretrained, **dict(model_args, **kwargs))
+    return _create_recnext(f'recnext_a5.{variant}_300e_in1k', pretrained=pretrained, distillation=distillation, **dict(model_args, **kwargs))
 
 
 if __name__ == "__main__":

@@ -444,7 +444,7 @@ def recnext_t(pretrained=False, **kwargs):
     variant = 'dist' if distillation else 'base'
     drop_path_rate = 0.0 
     model_args = dict(embed_dim=(64, 128, 256, 512), depth=(0, 2, 8, 10), mlp_ratios=(2, 2, 2, 1.5), num_heads=(1, 1, 1, 2), drop_path_rate=drop_path_rate, split_rates=(4, 4, 4, 4))
-    return _create_recnext(f'recnext_t.{variant}_300e_in1k', pretrained=pretrained, **dict(model_args, **kwargs))
+    return _create_recnext(f'recnext_t.{variant}_300e_in1k', pretrained=pretrained, distillation=distillation, **dict(model_args, **kwargs))
 
 
 @register_model
@@ -453,7 +453,7 @@ def recnext_s(pretrained=False, **kwargs):
     variant = 'dist' if distillation else 'base'
     drop_path_rate = 0.0 if distillation else 0.1
     model_args = dict(embed_dim=(128, 256, 384, 512), depth=(0, 2, 8, 10), mlp_ratios=(2, 2, 2, 1.5), num_heads=(1, 1, 1, 2), drop_path_rate=drop_path_rate, split_rates=(4, 4, 4, 4))
-    return _create_recnext(f'recnext_s.{variant}_300e_in1k', pretrained=pretrained, **dict(model_args, **kwargs))
+    return _create_recnext(f'recnext_s.{variant}_300e_in1k', pretrained=pretrained, distillation=distillation, **dict(model_args, **kwargs))
 
 
 @register_model
@@ -462,7 +462,7 @@ def recnext_b(pretrained=False, **kwargs):
     variant = 'dist' if distillation else 'base'
     drop_path_rate = 0.0 if distillation else 0.2
     model_args = dict(embed_dim=(128, 256, 384, 512), depth=(2, 8, 8, 12), mlp_ratios=(2, 2, 2, 1.5), num_heads=(1, 1, 1, 2), drop_path_rate=drop_path_rate, split_rates=(4, 4, 4, 4))
-    return _create_recnext(f'recnext_b.{variant}_300e_in1k', pretrained=pretrained, **dict(model_args, **kwargs))
+    return _create_recnext(f'recnext_b.{variant}_300e_in1k', pretrained=pretrained, distillation=distillation, **dict(model_args, **kwargs))
 
 
 if __name__ == "__main__":
