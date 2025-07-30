@@ -429,6 +429,7 @@ logs/ablation
 │   ├── <a style="text-decoration:none" href="./logs/ablation/224/recnext_m1_120e_224x224_rec_5x5_7603.txt">recnext_m1_120e_224x224_rec_5x5_7603.txt</a>
 │   ├── <a style="text-decoration:none" href="./logs/ablation/224/recnext_m1_120e_224x224_rec_7x7_7567.txt">recnext_m1_120e_224x224_rec_7x7_7567.txt</a>
 │   ├── <a style="text-decoration:none" href="./logs/ablation/224/recnext_m1_120e_224x224_rec_7x7_nearest_7571.txt">recnext_m1_120e_224x224_rec_7x7_nearest_7571.txt</a>
+│   ├── <a style="text-decoration:none" href="./logs/ablation/224/recnext_m1_120e_224x224_rec_7x7_nearest_ssm_7593.txt">recnext_m1_120e_224x224_rec_7x7_nearest_ssm_7593.txt</a>
 │   └── <a style="text-decoration:none" href="./logs/ablation/224/recnext_m1_120e_224x224_rec_7x7_unpool_7548.txt">recnext_m1_120e_224x224_rec_7x7_unpool_7548.txt</a>
 └── 384
     ├── <a style="text-decoration:none" href="./logs/ablation/384/recnext_m1_120e_384x384_3x3_7635.txt">recnext_m1_120e_384x384_3x3_7635.txt</a>
@@ -462,6 +463,7 @@ fd txt logs/ablation -x sh -c 'printf "%.2f %s\n" "$(jq -s "map(.test_acc1) | ma
 76.03 logs/ablation/224/recnext_m1_120e_224x224_rec_5x5_7603.txt
 75.67 logs/ablation/224/recnext_m1_120e_224x224_rec_7x7_7567.txt
 75.71 logs/ablation/224/recnext_m1_120e_224x224_rec_7x7_nearest_7571.txt
+75.93 logs/ablation/224/recnext_m1_120e_224x224_rec_7x7_nearest_ssm_7593.txt
 75.48 logs/ablation/224/recnext_m1_120e_224x224_rec_7x7_unpool_7548.txt
 76.35 logs/ablation/384/recnext_m1_120e_384x384_3x3_7635.txt
 77.42 logs/ablation/384/recnext_m1_120e_384x384_7x7_7742.txt
@@ -477,6 +479,46 @@ fd txt logs/ablation -x sh -c 'printf "%.2f %s\n" "$(jq -s "map(.test_acc1) | ma
 ```
 </details>
 
+</details>
+
+<details>
+  <summary>
+  <span style="font-size: larger; ">RecConv Recurrent Aggregation</span>
+  </summary>
+
+  ```python
+class RecConv2d(nn.Module):
+    def __init__(self, in_channels, kernel_size=5, bias=False, level=1, mode='nearest'):
+        super().__init__()
+        self.level = level
+        self.mode = mode
+        kwargs = {
+            'in_channels': in_channels,
+            'out_channels': in_channels,
+            'groups': in_channels,
+            'kernel_size': kernel_size,
+            'padding': kernel_size // 2,
+            'bias': bias
+        }
+        self.n = nn.Conv2d(stride=2, **kwargs)
+        self.a = nn.Conv2d(**kwargs)
+        self.b = nn.Conv2d(**kwargs) if level >1 else None
+        self.c = nn.Conv2d(**kwargs)
+        self.d = nn.Conv2d(**kwargs)
+
+    def forward(self, x):
+        # 1. Generate Multi-scale Features.
+        fs = [x]
+        for _ in range(self.level):
+            fs.append(self.n(fs[-1]))
+
+        # 2. Multi-scale Recurrent Aggregation.
+        h = None
+        for i, o in reversed(list(zip(fs[1:], fs[:-1]))):
+            h = self.a(h) + self.b(i) if h is not None else self.b(i)
+            h = nn.functional.interpolate(h, size=o.shape[2:], mode=self.mode)
+        return self.c(h) + self.d(x)
+  ```
 </details>
 
 ### RecConv Variants
