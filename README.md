@@ -501,8 +501,8 @@ class RecConv2d(nn.Module):
             'bias': bias
         }
         self.n = nn.Conv2d(stride=2, **kwargs)
-        self.a = nn.Conv2d(**kwargs)
-        self.b = nn.Conv2d(**kwargs) if level >1 else None
+        self.a = nn.Conv2d(**kwargs) if level >1 else None
+        self.b = nn.Conv2d(**kwargs)
         self.c = nn.Conv2d(**kwargs)
         self.d = nn.Conv2d(**kwargs)
 
