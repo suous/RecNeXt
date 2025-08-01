@@ -9,25 +9,29 @@ import lsnet.model
 
 MODEL_CONFIGS = {
     # M-series models (convolution + bilinear interpolation)
-    'recnext_m0': {'series': 'M', 'embed_dim': (40, 80, 160, 320), 'depth': (2, 2, 9, 1), 'params': '2.5M', 'macs': '0.4G', 'latency': '1.0ms', 'mlp_ratio': (2, 2, 2, 2)},
-    'recnext_m1': {'series': 'M', 'embed_dim': (48, 96, 192, 384), 'depth': (3, 3, 15, 2), 'params': '5.2M', 'macs': '0.9G', 'latency': '1.4ms', 'mlp_ratio': (2, 2, 2, 2)},
-    'recnext_m2': {'series': 'M', 'embed_dim': (56, 112, 224, 448), 'depth': (3, 3, 15, 2), 'params': '6.8M', 'macs': '1.2G', 'latency': '1.5ms', 'mlp_ratio': (2, 2, 2, 2)},
-    'recnext_m3': {'series': 'M', 'embed_dim': (64, 128, 256, 512), 'depth': (3, 3, 13, 2), 'params': '8.2M', 'macs': '1.4G', 'latency': '1.6ms', 'mlp_ratio': (2, 2, 2, 2)},
-    'recnext_m4': {'series': 'M', 'embed_dim': (64, 128, 256, 512), 'depth': (5, 5, 25, 4), 'params': '14.1M', 'macs': '2.4G', 'latency': '2.4ms', 'mlp_ratio': (2, 2, 2, 2)},
-    'recnext_m5': {'series': 'M', 'embed_dim': (80, 160, 320, 640), 'depth': (7, 7, 35, 2), 'params': '22.9M', 'macs': '4.7G', 'latency': '3.4ms', 'mlp_ratio': (2, 2, 2, 2)},
+    'recnext_m0': {'series': 'M', 'embed_dim': (40, 80, 160, 320), 'depth': (2, 2, 9, 1), 'params': '2.5M', 'macs': '0.4G', 'latency': '1.0ms', 'throughput': '750', 'mlp_ratio': (2, 2, 2, 2)},
+    'recnext_m1': {'series': 'M', 'embed_dim': (48, 96, 192, 384), 'depth': (3, 3, 15, 2), 'params': '5.2M', 'macs': '0.9G', 'latency': '1.4ms', 'throughput': '384', 'mlp_ratio': (2, 2, 2, 2)},
+    'recnext_m2': {'series': 'M', 'embed_dim': (56, 112, 224, 448), 'depth': (3, 3, 15, 2), 'params': '6.8M', 'macs': '1.2G', 'latency': '1.5ms', 'throughput': '325', 'mlp_ratio': (2, 2, 2, 2)},
+    'recnext_m3': {'series': 'M', 'embed_dim': (64, 128, 256, 512), 'depth': (3, 3, 13, 2), 'params': '8.2M', 'macs': '1.4G', 'latency': '1.6ms', 'throughput': '314', 'mlp_ratio': (2, 2, 2, 2)},
+    'recnext_m4': {'series': 'M', 'embed_dim': (64, 128, 256, 512), 'depth': (5, 5, 25, 4), 'params': '14.1M', 'macs': '2.4G', 'latency': '2.4ms', 'throughput': '169', 'mlp_ratio': (2, 2, 2, 2)},
+    'recnext_m5': {'series': 'M', 'embed_dim': (80, 160, 320, 640), 'depth': (7, 7, 35, 2), 'params': '22.9M', 'macs': '4.7G', 'latency': '3.4ms', 'throughput': '104', 'mlp_ratio': (2, 2, 2, 2)},
     
     # A-series models (linear attention + nearest interpolation)
-    'recnext_a0': {'series': 'A', 'embed_dim': (40, 80, 160, 320), 'depth': (2, 2, 9, 1), 'params': '2.8M', 'macs': '0.4G', 'latency': '1.4ms', 'mlp_ratio': (2, 2, 2, 2)},
-    'recnext_a1': {'series': 'A', 'embed_dim': (48, 96, 192, 384), 'depth': (3, 3, 15, 2), 'params': '5.9M', 'macs': '0.9G', 'latency': '1.9ms', 'mlp_ratio': (2, 2, 2, 2)},
-    'recnext_a2': {'series': 'A', 'embed_dim': (56, 112, 224, 448), 'depth': (3, 3, 15, 2), 'params': '7.9M', 'macs': '1.2G', 'latency': '2.2ms', 'mlp_ratio': (2, 2, 2, 2)},
-    'recnext_a3': {'series': 'A', 'embed_dim': (64, 128, 256, 512), 'depth': (3, 3, 13, 2), 'params': '9.0M', 'macs': '1.4G', 'latency': '2.4ms', 'mlp_ratio': (2, 2, 2, 1.875)},
-    'recnext_a4': {'series': 'A', 'embed_dim': (64, 128, 256, 512), 'depth': (5, 5, 25, 4), 'params': '15.8M', 'macs': '2.4G', 'latency': '3.6ms', 'mlp_ratio': (2, 2, 2, 1.875)},
-    'recnext_a5': {'series': 'A', 'embed_dim': (80, 160, 320, 640), 'depth': (7, 7, 35, 2), 'params': '25.7M', 'macs': '4.7G', 'latency': '5.6ms', 'mlp_ratio': (2, 2, 2, 1.875)},
+    'recnext_a0': {'series': 'A', 'embed_dim': (40, 80, 160, 320), 'depth': (2, 2, 9, 1), 'params': '2.8M', 'macs': '0.4G', 'latency': '1.4ms', 'throughput': '4891', 'mlp_ratio': (2, 2, 2, 2)},
+    'recnext_a1': {'series': 'A', 'embed_dim': (48, 96, 192, 384), 'depth': (3, 3, 15, 2), 'params': '5.9M', 'macs': '0.9G', 'latency': '1.9ms', 'throughput': '2730', 'mlp_ratio': (2, 2, 2, 2)},
+    'recnext_a2': {'series': 'A', 'embed_dim': (56, 112, 224, 448), 'depth': (3, 3, 15, 2), 'params': '7.9M', 'macs': '1.2G', 'latency': '2.2ms', 'throughput': '2331', 'mlp_ratio': (2, 2, 2, 2)},
+    'recnext_a3': {'series': 'A', 'embed_dim': (64, 128, 256, 512), 'depth': (3, 3, 13, 2), 'params': '9.0M', 'macs': '1.4G', 'latency': '2.4ms', 'throughput': '2151', 'mlp_ratio': (2, 2, 2, 1.875)},
+    'recnext_a4': {'series': 'A', 'embed_dim': (64, 128, 256, 512), 'depth': (5, 5, 25, 4), 'params': '15.8M', 'macs': '2.4G', 'latency': '3.6ms', 'throughput': '1265', 'mlp_ratio': (2, 2, 2, 1.875)},
+    'recnext_a5': {'series': 'A', 'embed_dim': (80, 160, 320, 640), 'depth': (7, 7, 35, 2), 'params': '25.7M', 'macs': '4.7G', 'latency': '5.6ms', 'throughput': '733', 'mlp_ratio': (2, 2, 2, 1.875)},
 
     # L-series models (LSNet architecture)
-    'recnext_t': {'series': 'L', 'embed_dim': (64, 128, 256, 512), 'depth': (0, 2, 8, 10), 'params': '12.1M', 'macs': '0.3G', 'latency': '1.8ms', 'mlp_ratio': (2, 2, 2, 1.5)},
-    'recnext_s': {'series': 'L', 'embed_dim': (128, 256, 384, 512), 'depth': (0, 2, 8, 10), 'params': '15.8M', 'macs': '0.7G', 'latency': '2.0ms', 'mlp_ratio': (2, 2, 2, 1.5)},
-    'recnext_b': {'series': 'L', 'embed_dim': (128, 256, 384, 512), 'depth': (2, 8, 8, 12), 'params': '19.3M', 'macs': '1.1G', 'latency': '2.5ms', 'mlp_ratio': (2, 2, 2, 1.5)},
+    'recnext_t': {'series': 'L', 'embed_dim': (64, 128, 256, 512), 'depth': (0, 2, 8, 10), 'params': '12.1M', 'macs': '0.3G', 'latency': '1.8ms', 'throughput': '13878', 'mlp_ratio': (2, 2, 2, 1.5)},
+    'recnext_s': {'series': 'L', 'embed_dim': (128, 256, 384, 512), 'depth': (0, 2, 8, 10), 'params': '15.8M', 'macs': '0.7G', 'latency': '2.0ms', 'throughput': '7989', 'mlp_ratio': (2, 2, 2, 1.5)},
+    'recnext_b': {'series': 'L', 'embed_dim': (128, 256, 384, 512), 'depth': (2, 8, 8, 12), 'params': '19.3M', 'macs': '1.1G', 'latency': '2.5ms', 'throughput': '4450', 'mlp_ratio': (2, 2, 2, 1.5)},
+
+    'recnext_t_share_channel': {'series': 'L', 'embed_dim': (64, 128, 256, 512), 'depth': (0, 2, 8, 10), 'params': '12.1M', 'macs': '0.3G', 'latency': '1.8ms', 'throughput': '13957', 'mlp_ratio': (2, 2, 2, 1.5)},
+    'recnext_s_share_channel': {'series': 'L', 'embed_dim': (128, 256, 384, 512), 'depth': (0, 2, 8, 10), 'params': '15.8M', 'macs': '0.7G', 'latency': '2.0ms', 'throughput': '8034', 'mlp_ratio': (2, 2, 2, 1.5)},
+    'recnext_b_share_channel': {'series': 'L', 'embed_dim': (128, 256, 384, 512), 'depth': (2, 8, 8, 12), 'params': '19.2M', 'macs': '1.1G', 'latency': '2.5ms', 'throughput': '4472', 'mlp_ratio': (2, 2, 2, 1.5)},
 }
 
 def create_detailed_model_card(model_name, distillation=False):

@@ -2,7 +2,7 @@ import math
 import torch
 import torch.nn as nn
 from timm.layers import trunc_normal_, DropPath
-from timm.models import register_model, create_model, build_model_with_cfg
+from timm.models import register_model, create_model, build_model_with_cfg, generate_default_cfgs
 
 
 class RepVGGDW(torch.nn.Module):
@@ -459,7 +459,7 @@ default_cfgs = generate_default_cfgs(
 )
 
 @register_model
-def recnext_t(pretrained=False, **kwargs):
+def recnext_t_share_channel(pretrained=False, **kwargs):
     distillation = kwargs.pop('distillation', False)
     variant = 'dist' if distillation else 'base'
     drop_path_rate = 0.0 
@@ -468,7 +468,7 @@ def recnext_t(pretrained=False, **kwargs):
 
 
 @register_model
-def recnext_s(pretrained=False, **kwargs):
+def recnext_s_share_channel(pretrained=False, **kwargs):
     distillation = kwargs.pop('distillation', False)
     variant = 'dist' if distillation else 'base'
     drop_path_rate = 0.0 if distillation else 0.1
@@ -477,7 +477,7 @@ def recnext_s(pretrained=False, **kwargs):
 
 
 @register_model
-def recnext_b(pretrained=False, **kwargs):
+def recnext_b_share_channel(pretrained=False, **kwargs):
     distillation = kwargs.pop('distillation', False)
     variant = 'dist' if distillation else 'base'
     drop_path_rate = 0.0 if distillation else 0.2

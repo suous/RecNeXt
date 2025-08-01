@@ -678,7 +678,7 @@ fd txt mlla/logs -x sh -c 'printf "%.2f %s\n" "$(rg -N -I -U -o "EPOCH.*\n.*Acc@
 
 ## Acknowledgement
 
-Classification (ImageNet) code base is partly built with [LeViT](https://github.com/facebookresearch/LeViT), [PoolFormer](https://github.com/sail-sg/poolformer), [EfficientFormer](https://github.com/snap-research/EfficientFormer),  [RepViT](https://github.com/THU-MIG/RepViT), [LSNet](https://github.com/jameslahm/lsnet), and [MogaNet](https://github.com/Westlake-AI/MogaNet).
+Classification (ImageNet) code base is partly built with [LeViT](https://github.com/facebookresearch/LeViT), [PoolFormer](https://github.com/sail-sg/poolformer), [EfficientFormer](https://github.com/snap-research/EfficientFormer),  [RepViT](https://github.com/THU-MIG/RepViT), [LSNet](https://github.com/jameslahm/lsnet), [MLLA](https://github.com/LeapLabTHU/MLLA), and [MogaNet](https://github.com/Westlake-AI/MogaNet).
 
 The detection and segmentation pipeline is from [MMCV](https://github.com/open-mmlab/mmcv) ([MMDetection](https://github.com/open-mmlab/mmdetection) and [MMSegmentation](https://github.com/open-mmlab/mmsegmentation)). 
 

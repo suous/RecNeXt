@@ -2,7 +2,7 @@
 {{ card_data }}
 ---
 
-# Model Card for RecNeXt-{{ model_name.split('_')[-1].upper() }}{% if distillation %} (With Knowledge Distillation){% endif %}
+# Model Card for RecNeXt-{{ model_name.replace("_share_channel", "").split('_')[-1].upper() }}{% if distillation %} (With Knowledge Distillation){% endif %}
 
 ## Abstract
 Recent advances in vision transformers (ViTs) have demonstrated the advantage of global modeling capabilities, prompting widespread integration of large-kernel convolutions for enlarging the effective receptive field (ERF). However, the quadratic scaling of parameter count and computational complexity (FLOPs) with respect to kernel size poses significant efficiency and optimization challenges. This paper introduces RecConv, a recursive decomposition strategy that efficiently constructs multi-frequency representations using small-kernel convolutions. RecConv establishes a linear relationship between parameter growth and decomposing levels which determines the effective receptive field $k\times 2^\ell$ for a base kernel $k$ and $\ell$ levels of decomposition, while maintaining constant FLOPs regardless of the ERF expansion. Specifically, RecConv achieves a parameter expansion of only $\ell+2$ times and a maximum FLOPs increase of $5/3$ times, compared to the exponential growth ($4^\ell$) of standard and depthwise convolutions. RecNeXt-M3 outperforms RepViT-M1.1 by 1.9 $AP^{box}$ on COCO with similar FLOPs. This innovation provides a promising avenue towards designing efficient and compact networks across various modalities. Codes and models can be found at https://github.com/suous/RecNeXt.
@@ -23,6 +23,7 @@ Recent advances in vision transformers (ViTs) have demonstrated the advantage of
     - **Parameters**: {{ config.get('params', 'N/A') }}
     - **MACs**: {{ config.get('macs', 'N/A') }}
     - **Latency**: {{ config.get('latency', 'N/A') }} (iPhone 13, iOS 18)
+    - **Throughput**: {{ config.get('throughput', 'N/A') }} (RTX 3090)
     - **Image Size**: {{ config.get('image_size', '224x224') }}
 
 - **Architecture Configuration**: 
@@ -332,14 +333,14 @@ python publish.py --model_name recnext_m1 --checkpoint_path pretrain/checkpoint_
 ## Downstream Tasks
 [Object Detection and Instance Segmentation](https://github.com/suous/RecNeXt/blob/main/detection/README.md)<br>
 
-| model      | $AP^b$ | $AP_{50}^b$ | $AP_{75}^b$ | $AP^m$ | $AP_{50}^m$ | $AP_{75}^m$ | Latency |                                       Ckpt                                        |                                              Log                                               |
-|:-----------|:------:|:-----------:|:-----------:|:------:|:-----------:|:-----------:|:-------:|:---------------------------------------------------------------------------------:|:----------------------------------------------------------------------------------------------:|
-| RecNeXt-M3 |  41.7  |    63.4     |    45.4     |  38.6  |    60.5     |    41.4     |  5.2ms  | [M3](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m3_coco.pth) | [M3](https://raw.githubusercontent.com/suous/RecNeXt/main/detection/logs/recnext_m3_coco.json) |
-| RecNeXt-M4 |  43.5  |    64.9     |    47.7     |  39.7  |    62.1     |    42.4     |  7.6ms  | [M4](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m4_coco.pth) | [M4](https://raw.githubusercontent.com/suous/RecNeXt/main/detection/logs/recnext_m4_coco.json) |
-| RecNeXt-M5 |  44.6  |    66.3     |    49.0     |  40.6  |    63.5     |    43.5     | 12.4ms  | [M5](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m5_coco.pth) | [M5](https://raw.githubusercontent.com/suous/RecNeXt/main/detection/logs/recnext_m5_coco.json) |
-| RecNeXt-A3 |  42.1  |    64.1     |    46.2     |  38.8  |    61.1     |    41.6     |  8.3ms  | [A3](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_a3_coco.pth) | [A3](https://raw.githubusercontent.com/suous/RecNeXt/main/detection/logs/recnext_a3_coco.json) |
-| RecNeXt-A4 |  43.5  |    65.4     |    47.6     |  39.8  |    62.4     |    42.9     | 14.0ms  | [A4](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_a4_coco.pth) | [A4](https://raw.githubusercontent.com/suous/RecNeXt/main/detection/logs/recnext_a4_coco.json) |
-| RecNeXt-A5 |  44.4  |    66.3     |    48.9     |  40.3  |    63.3     |    43.4     | 25.3ms  | [A5](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_a5_coco.pth) | [A5](https://raw.githubusercontent.com/suous/RecNeXt/main/detection/logs/recnext_a5_coco.json) |
+| model | $AP^b$ | $AP_{50}^b$ | $AP_{75}^b$ | $AP^m$ | $AP_{50}^m$ | $AP_{75}^m$ | Latency |                                       Ckpt                                        |                                              Log                                               |
+|:------|:------:|:-----------:|:-----------:|:------:|:-----------:|:-----------:|:-------:|:---------------------------------------------------------------------------------:|:----------------------------------------------------------------------------------------------:|
+| M3    |  41.7  |    63.4     |    45.4     |  38.6  |    60.5     |    41.4     |  5.2ms  | [M3](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m3_coco.pth) | [M3](https://raw.githubusercontent.com/suous/RecNeXt/main/detection/logs/recnext_m3_coco.json) |
+| M4    |  43.5  |    64.9     |    47.7     |  39.7  |    62.1     |    42.4     |  7.6ms  | [M4](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m4_coco.pth) | [M4](https://raw.githubusercontent.com/suous/RecNeXt/main/detection/logs/recnext_m4_coco.json) |
+| M5    |  44.6  |    66.3     |    49.0     |  40.6  |    63.5     |    43.5     | 12.4ms  | [M5](https://github.com/suous/RecNeXt/releases/download/v1.0/recnext_m5_coco.pth) | [M5](https://raw.githubusercontent.com/suous/RecNeXt/main/detection/logs/recnext_m5_coco.json) |
+| A3    |  42.1  |    64.1     |    46.2     |  38.8  |    61.1     |    41.6     |  8.3ms  | [A3](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_a3_coco.pth) | [A3](https://raw.githubusercontent.com/suous/RecNeXt/main/detection/logs/recnext_a3_coco.json) |
+| A4    |  43.5  |    65.4     |    47.6     |  39.8  |    62.4     |    42.9     | 14.0ms  | [A4](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_a4_coco.pth) | [A4](https://raw.githubusercontent.com/suous/RecNeXt/main/detection/logs/recnext_a4_coco.json) |
+| A5    |  44.4  |    66.3     |    48.9     |  40.3  |    63.3     |    43.4     | 25.3ms  | [A5](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_a5_coco.pth) | [A5](https://raw.githubusercontent.com/suous/RecNeXt/main/detection/logs/recnext_a5_coco.json) |
 
 [Semantic Segmentation](https://github.com/suous/RecNeXt/blob/main/segmentation/README.md)
 
@@ -538,6 +539,11 @@ class RecConv2d(nn.Module):
 We apply RecConv to [MLLA](https://github.com/LeapLabTHU/MLLA) small variants, replacing linear attention and downsampling layers.
 Result in higher throughput and less training memory usage.
 
+<details>
+  <summary>
+  <span style="font-size: larger; ">Ablation Logs</span>
+  </summary>
+
 <pre>
 mlla/logs
 ├── 1_mlla_nano
@@ -553,6 +559,7 @@ mlla/logs
     ├── <a style="text-decoration:none" href="https://raw.githubusercontent.com/suous/RecNeXt/main/mlla/logs/2_mlla_mini/04_recattn_nearest_interp.txt">04_recattn_nearest_interp.txt</a>
     └── <a style="text-decoration:none" href="https://raw.githubusercontent.com/suous/RecNeXt/main/mlla/logs/2_mlla_mini/05_recattn_nearest_interp_simplify.txt">05_recattn_nearest_interp_simplify.txt</a>
 </pre>
+</details>
 
 ## Limitations
 
@@ -562,7 +569,7 @@ mlla/logs
 
 ## Acknowledgement
 
-Classification (ImageNet) code base is partly built with [LeViT](https://github.com/facebookresearch/LeViT), [PoolFormer](https://github.com/sail-sg/poolformer), [EfficientFormer](https://github.com/snap-research/EfficientFormer),  [RepViT](https://github.com/THU-MIG/RepViT), [LSNet](https://github.com/jameslahm/lsnet), and [MogaNet](https://github.com/Westlake-AI/MogaNet).
+Classification (ImageNet) code base is partly built with [LeViT](https://github.com/facebookresearch/LeViT), [PoolFormer](https://github.com/sail-sg/poolformer), [EfficientFormer](https://github.com/snap-research/EfficientFormer),  [RepViT](https://github.com/THU-MIG/RepViT), [LSNet](https://github.com/jameslahm/lsnet), [MLLA](https://github.com/LeapLabTHU/MLLA), and [MogaNet](https://github.com/Westlake-AI/MogaNet).
 
 The detection and segmentation pipeline is from [MMCV](https://github.com/open-mmlab/mmcv) ([MMDetection](https://github.com/open-mmlab/mmdetection) and [MMSegmentation](https://github.com/open-mmlab/mmsegmentation)).
 
