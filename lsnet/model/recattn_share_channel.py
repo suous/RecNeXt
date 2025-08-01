@@ -482,7 +482,7 @@ def recnext_b_share_channel(pretrained=False, **kwargs):
     variant = 'dist' if distillation else 'base'
     drop_path_rate = 0.0 if distillation else 0.2
     model_args = dict(embed_dim=(128, 256, 384, 512), depth=(2, 8, 8, 12), mlp_ratios=(2, 2, 2, 1.5), drop_path_rate=drop_path_rate, split_rates=(4, 4, 4, 4), share_stage=3)
-    return _create_recnext(f'recnext_b_share_channel.{variant}_300e_in1k_share_channel', pretrained=pretrained, distillation=distillation, **dict(model_args, **kwargs))
+    return _create_recnext(f'recnext_b_share_channel.{variant}_300e_in1k', pretrained=pretrained, distillation=distillation, **dict(model_args, **kwargs))
 
 
 if __name__ == "__main__":
