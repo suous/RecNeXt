@@ -1,7 +1,7 @@
 # [RecNeXt: Efficient Recursive Convolutions for Multi-Frequency Representations](https://arxiv.org/abs/2412.19628)
 
 [![license](https://img.shields.io/github/license/suous/RecNeXt)](https://github.com/suous/RecNeXt/blob/main/LICENSE)
-[![arXiv](https://img.shields.io/badge/arXiv-2406.16004-red)](https://arxiv.org/abs/2412.19628)
+[![arXiv](https://img.shields.io/badge/arXiv-2412.19628-red)](https://arxiv.org/abs/2412.19628)
 
 
 <div style="display: flex; justify-content: space-between;">
@@ -678,7 +678,7 @@ fd txt mlla/logs -x sh -c 'printf "%.2f %s\n" "$(rg -N -I -U -o "EPOCH.*\n.*Acc@
 
 ## Acknowledgement
 
-Classification (ImageNet) code base is partly built with [LeViT](https://github.com/facebookresearch/LeViT), [PoolFormer](https://github.com/sail-sg/poolformer), [EfficientFormer](https://github.com/snap-research/EfficientFormer),  [RepViT](https://github.com/THU-MIG/RepViT), and [MogaNet](https://github.com/Westlake-AI/MogaNet).
+Classification (ImageNet) code base is partly built with [LeViT](https://github.com/facebookresearch/LeViT), [PoolFormer](https://github.com/sail-sg/poolformer), [EfficientFormer](https://github.com/snap-research/EfficientFormer),  [RepViT](https://github.com/THU-MIG/RepViT), [LSNet](https://github.com/jameslahm/lsnet), and [MogaNet](https://github.com/Westlake-AI/MogaNet).
 
 The detection and segmentation pipeline is from [MMCV](https://github.com/open-mmlab/mmcv) ([MMDetection](https://github.com/open-mmlab/mmdetection) and [MMSegmentation](https://github.com/open-mmlab/mmsegmentation)). 
 

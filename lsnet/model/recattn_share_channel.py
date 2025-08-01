@@ -429,6 +429,34 @@ def _cfg(url='', **kwargs):
         **kwargs,
     }
 
+default_cfgs = generate_default_cfgs(
+    {
+        'recnext_t_share_channel.base_300e_in1k': _cfg(
+            hf_hub_id='suous/recnext_t_share_channel.base_300e_in1k',
+            tag=['base', 'without-distillation']
+        ),
+        'recnext_s_share_channel.base_300e_in1k': _cfg(
+            hf_hub_id='suous/recnext_s_share_channel.base_300e_in1k',
+            tag=['base', 'without-distillation']
+        ),
+        'recnext_b_share_channel.base_300e_in1k': _cfg(
+            hf_hub_id='suous/recnext_b_share_channel.base_300e_in1k',
+            tag=['base', 'without-distillation']
+        ),
+        'recnext_t_share_channel.dist_300e_in1k': _cfg(
+            hf_hub_id='suous/recnext_t_share_channel.dist_300e_in1k',
+            tag=['dist', 'knowledge-distillation']
+        ),
+        'recnext_s_share_channel.dist_300e_in1k': _cfg(
+            hf_hub_id='suous/recnext_s_share_channel.dist_300e_in1k',
+            tag=['dist', 'knowledge-distillation']
+        ),
+        'recnext_b_share_channel.dist_300e_in1k': _cfg(
+            hf_hub_id='suous/recnext_b_share_channel.dist_300e_in1k',
+            tag=['dist', 'knowledge-distillation']
+        ),
+    }
+)
 
 @register_model
 def recnext_t(pretrained=False, **kwargs):
@@ -436,7 +464,7 @@ def recnext_t(pretrained=False, **kwargs):
     variant = 'dist' if distillation else 'base'
     drop_path_rate = 0.0 
     model_args = dict(embed_dim=(64, 128, 256, 512), depth=(0, 2, 8, 10), mlp_ratios=(2, 2, 2, 1.5), drop_path_rate=drop_path_rate, split_rates=(4, 4, 4, 4), share_stage=3)
-    return _create_recnext(f'recnext_t.{variant}_300e_in1k_share_channel', pretrained=pretrained, distillation=distillation, **dict(model_args, **kwargs))
+    return _create_recnext(f'recnext_t_share_channel.{variant}_300e_in1k', pretrained=pretrained, distillation=distillation, **dict(model_args, **kwargs))
 
 
 @register_model
@@ -445,7 +473,7 @@ def recnext_s(pretrained=False, **kwargs):
     variant = 'dist' if distillation else 'base'
     drop_path_rate = 0.0 if distillation else 0.1
     model_args = dict(embed_dim=(128, 256, 384, 512), depth=(0, 2, 8, 10), mlp_ratios=(2, 2, 2, 1.5), drop_path_rate=drop_path_rate, split_rates=(4, 4, 4, 4), share_stage=3)
-    return _create_recnext(f'recnext_s.{variant}_300e_in1k_share_channel', pretrained=pretrained, distillation=distillation, **dict(model_args, **kwargs))
+    return _create_recnext(f'recnext_s_share_channel.{variant}_300e_in1k', pretrained=pretrained, distillation=distillation, **dict(model_args, **kwargs))
 
 
 @register_model
@@ -454,7 +482,7 @@ def recnext_b(pretrained=False, **kwargs):
     variant = 'dist' if distillation else 'base'
     drop_path_rate = 0.0 if distillation else 0.2
     model_args = dict(embed_dim=(128, 256, 384, 512), depth=(2, 8, 8, 12), mlp_ratios=(2, 2, 2, 1.5), drop_path_rate=drop_path_rate, split_rates=(4, 4, 4, 4), share_stage=3)
-    return _create_recnext(f'recnext_b.{variant}_300e_in1k_share_channel', pretrained=pretrained, distillation=distillation, **dict(model_args, **kwargs))
+    return _create_recnext(f'recnext_b_share_channel.{variant}_300e_in1k_share_channel', pretrained=pretrained, distillation=distillation, **dict(model_args, **kwargs))
 
 
 if __name__ == "__main__":
@@ -469,3 +497,75 @@ if __name__ == "__main__":
     except ModuleNotFoundError:
         pass
 
+"""
+# jit script
+from typing import List, Optional
+
+
+class PartialChannelOperation(nn.Module):
+    def __init__(self, attn, part):
+        super().__init__()
+        self.attn = attn
+        self.part = part
+
+    def forward(self, x: torch.Tensor, x1s: Optional[List[torch.Tensor]]) -> torch.Tensor:
+        x1, x2 = x[:, :self.part], x[:, self.part:]
+        x1 = self.attn(x1)
+
+        if x1s is not None:
+            x1s.append(x1)
+
+        return torch.cat([x1, x2], dim=1)
+
+
+class ShareChannelOperation(nn.Module):
+    def forward(self, x: torch.Tensor, x1s: Optional[List[torch.Tensor]]) -> torch.Tensor:
+        if x1s is not None:
+            return x + torch.cat(x1s, dim=1)
+        return x
+
+
+class MetaNeXtBlock(nn.Module):
+    def __init__(self, in_channels, mlp_ratio, act_layer=nn.GELU, stage=0, block=0, drop_path=0, split_rate=4, is_share_stage=False):
+        super().__init__()
+        self.is_share_block = is_share_stage and (block + 1) % (split_rate + 1) == 0
+        self.rep_mixer = RepVGGDW(in_channels)
+
+        if self.is_share_block:
+            # share previous partial channel operation
+            self.token_mixer = ShareChannelOperation()
+        else:
+            split_part = in_channels // split_rate
+            RecAttn = LinearAttention3 if stage >= 2 else RecAttn2d
+            self.token_mixer = PartialChannelOperation(attn=RecAttn(split_part, stage=stage), part=split_part)
+        self.channel_mixer = mlp(in_channels, in_channels * mlp_ratio, act_layer=act_layer)
+        self.drop_path = DropPath(drop_path) if drop_path > 0. else nn.Identity()
+
+    def forward(self, x: torch.Tensor, x1s: Optional[List[torch.Tensor]]) -> torch.Tensor:
+        x = self.rep_mixer(x)
+        return x + self.drop_path(self.channel_mixer(self.token_mixer(x, x1s)))
+
+
+class RecNextStage(nn.Module):
+    def __init__(self, in_channels, out_channels, depth, mlp_ratio, act_layer=nn.GELU, downsample=True, stage=0, split_rate=4, drop_path_rates=None, share_stage=3):
+        super().__init__()
+        drop_path_rates = drop_path_rates or [0.] * depth
+        self.is_share_stage = stage >= share_stage
+        self.downsample = Downsample(in_channels, out_channels, mlp_ratio, act_layer=act_layer, stage=stage, drop_path=drop_path_rates[0]) if downsample else nn.Identity()
+        blocks = [MetaNeXtBlock(out_channels, mlp_ratio, act_layer, stage, i, drop_path_rates[i], split_rate, self.is_share_stage) for i in range(depth)]
+        self.blocks = nn.ModuleList(blocks)
+
+    def forward(self, x):
+        x = self.downsample(x)
+        if not self.is_share_stage:
+            for block in self.blocks:
+                x = block(x, None)
+            return x
+
+        x1s: List[torch.Tensor] = []
+        for block in self.blocks:
+            x = block(x, x1s)
+            if block.is_share_block:
+                x1s.clear()
+        return x
+"""

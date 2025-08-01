@@ -1,5 +1,15 @@
 # More Comparisons
 
+## Overall Architecture
+
+We present a simple architecture, the overall design follows [LSNet](https://github.com/jameslahm/lsnet). This framework centers around sharing channel features from the previous layers.
+Our motivation for doing so is to reduce the computational cost of token mixers and minimize feature redundancy in the final stage. 
+We would greatly appreciate any helpful suggestions.
+
+![Architecture](./figures/architecture.png)
+
+## ImageNet-1K Results
+
 ![Classification](./figures/classification.png)
 
 We evaluate **T**, **S**, **B** variants on ImageNet-1K, comparing them against the SOTA efficient architecture, [LSNet](https://github.com/jameslahm/lsnet). 
@@ -24,6 +34,16 @@ class SKA(nn.Module):
         return (x * w.repeat(1, C // w.shape[1], 1, 1, 1)).sum(dim=2) # [B, C, K*K, H, W] 
 ```
 
+### With **Shared-Channel Blocks**
+
+| Model |    Top-1     | Params | MACs | Latency |                                                                                                             Ckpt                                                                                                             |                                                                                                                 Fused                                                                                                                  |                                                                    Log                                                                    |                                                     Core ML                                                      |
+|:------|:------------:|:------:|:----:|:-------:|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:--------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:-----------------------------------------------------------------------------------------------------------------------------------------:|:----------------------------------------------------------------------------------------------------------------:|
+| T     | 76.8 \| 75.2 | 12.1M  | 0.3G |  1.8ms  | [dist](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_t_share_channel_distill_300e.pth) \| [norm](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_t_share_channel_without_distill_300e.pth) | [dist](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_t_share_channel_distill_300e_fused.pt) \| [norm](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_t_share_channel_without_distill_300e_fused.pt) | [dist](./logs/distill/recnext_t_share_channel_distill_300e.txt) \| [norm](./logs/normal/recnext_t_share_channel_without_distill_300e.txt) | [dist](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_t_share_channel_distill_300e_224.mlmodel) |
+| S     | 79.5 \| 78.3 | 15.8M  | 0.7G |  2.0ms  | [dist](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_s_share_channel_distill_300e.pth) \| [norm](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_s_share_channel_without_distill_300e.pth) | [dist](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_s_share_channel_distill_300e_fused.pt) \| [norm](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_s_share_channel_without_distill_300e_fused.pt) | [dist](./logs/distill/recnext_s_share_channel_distill_300e.txt) \| [norm](./logs/normal/recnext_s_share_channel_without_distill_300e.txt) | [dist](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_s_share_channel_distill_300e_224.mlmodel) |
+| B     | 81.5 \| 80.3 | 19.2M  | 1.1G |  2.5ms  | [dist](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_b_share_channel_distill_300e.pth) \| [norm](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_b_share_channel_without_distill_300e.pth) | [dist](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_b_share_channel_distill_300e_fused.pt) \| [norm](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_b_share_channel_without_distill_300e_fused.pt) | [dist](./logs/distill/recnext_b_share_channel_distill_300e.txt) \| [norm](./logs/normal/recnext_b_share_channel_without_distill_300e.txt) | [dist](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_b_share_channel_distill_300e_224.mlmodel) |
+
+### Without **Shared-Channel Blocks**
+
 | Model |    Top-1     | Params | MACs | Latency |                                                                                               Ckpt                                                                                               |                                                                                                   Fused                                                                                                    |                                                      Log                                                      |                                              Core ML                                               |
 |:------|:------------:|:------:|:----:|:-------:|:------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------:|:-------------------------------------------------------------------------------------------------------------:|:--------------------------------------------------------------------------------------------------:|
 | T     | 76.6 \| 75.1 | 12.1M  | 0.3G |  1.8ms  | [dist](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_t_distill_300e.pth) \| [norm](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_t_without_distill_300e.pth) | [dist](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_t_distill_300e_fused.pt) \| [norm](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_t_without_distill_300e_fused.pt) | [dist](./logs/distill/recnext_t_distill_300e.txt) \| [norm](./logs/normal/recnext_t_without_distill_300e.txt) | [dist](https://github.com/suous/RecNeXt/releases/download/v2.0/recnext_t_distill_300e_224.mlmodel) |
@@ -42,17 +62,17 @@ fd txt logs -x sh -c 'printf "%.1f %s\n" "$(jq -s "map(.test_acc1) | max" {})" "
 
 ```
 81.4 logs/distill/recnext_b_distill_300e.txt
-81.5 logs/distill/recnext_b_distill_300e_share_channel.txt
+81.5 logs/distill/recnext_b_share_channel_distill_300e.txt
 79.6 logs/distill/recnext_s_distill_300e.txt
-79.5 logs/distill/recnext_s_distill_300e_share_channel.txt
+79.5 logs/distill/recnext_s_share_channel_distill_300e.txt
 76.6 logs/distill/recnext_t_distill_300e.txt
-76.8 logs/distill/recnext_t_distill_300e_share_channel.txt
+76.8 logs/distill/recnext_t_share_channel_distill_300e.txt
 80.3 logs/normal/recnext_b_without_distill_300e.txt
-80.3 logs/normal/recnext_b_without_distill_300e_share_channel.txt
+80.3 logs/normal/recnext_b_share_channel_without_distill_300e.txt
 78.3 logs/normal/recnext_s_without_distill_300e.txt
-78.3 logs/normal/recnext_s_without_distill_300e_share_channel.txt
+78.3 logs/normal/recnext_s_share_channel_without_distill_300e.txt
 75.1 logs/normal/recnext_t_without_distill_300e.txt
-75.2 logs/normal/recnext_t_without_distill_300e_share_channel.txt
+75.2 logs/normal/recnext_t_share_channel_without_distill_300e.txt
 ```
 </details>
 
@@ -87,9 +107,3 @@ Robustness evaluation on ImageNet-C, ImageNet-A, ImageNet-R, and ImageNet-Sketch
 
 ![Robustness](./figures/robust.png)
 
-## Slightly More Efficient Architecture 
-
-Here we present a slightly more efficient architecture than our previous design. This simple framework centers around sharing channel features from the previous layers.
-Our motivation for doing so is to reduce the computational cost of token mixers and minimize feature redundancy in the final stage. Our preliminary experiments show a slight reduction in parameters and a slight increase in GPU throughput, without significant performance changes. We would greatly appreciate any helpful suggestions.
-
-![Architecture](./figures/architecture.png)
