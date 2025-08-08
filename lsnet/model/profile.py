@@ -9,7 +9,17 @@ from torch.nn.functional import scaled_dot_product_attention
 class LinearAttention3(nn.Module):
     """
     The computational complexity is quadratic relative to the sequence length.
+    Complexity: O(c n^2)
     x_{\text{out}}^{(3)} = \frac{q^\top k}{\text{mean}(q^\top k, \text{dim}=-1) + \epsilon} \cdot v^\top= \frac{q^\top k v^\top}{\text{mean}(q^\top k, \text{dim}=-1) + \epsilon}
+
+    Example:
+        q = torch.rand(4, 2) # [c, n]
+        k = torch.rand(4, 2) # [c, n]
+        v = torch.rand(4, 2) # [c, n]
+
+        qk = q.T @ k                               # [n, c] @ [c, n] -> [n, n]
+        u = qk @ v.T                               # [n, n] @ [n, c] -> [n, c]
+        x = u / qk.mean(dim=-1, keepdims=True)     # [n, c] / [n, 1] -> [n, c]
     """
 
     def __init__(self, dim, **kwargs):
@@ -36,7 +46,17 @@ class LinearAttention3(nn.Module):
 class LinearAttention4(nn.Module):
     """
     The computational complexity is quadratic relative to the channel dimension.
+    Complexity: O(n c^2)
     x_{\text{out}}^{(4)} = \frac{q^\top}{q^\top \text{mean}(k, \text{dim}=-1) + \epsilon} \cdot k v^\top = \frac{q^\top k v^\top}{q^\top \cdot \text{mean}(k, \text{dim}=-1) + \epsilon}
+
+    Example:
+        q = torch.rand(4, 2) # [c, n]
+        k = torch.rand(4, 2) # [c, n]
+        v = torch.rand(4, 2) # [c, n]
+
+        u = q.T @ (k @ v.T)                        # [n, c] @ ([c, n] @ [n, c]) -> [n, c]
+        d = q.T @ k.mean(dim=-1, keepdims=True)    # [n, c] @ [c, 1] -> [n, 1]
+        x = u / d                                  # [n, c] / [n, 1] -> [n, c]
     """
 
     def __init__(self, dim, **kwargs):
@@ -81,9 +101,7 @@ def calculate_similarity(out1, out2, name1, name2):
     """Calculate similarity metrics between two outputs."""
     mse = torch.nn.functional.mse_loss(out1, out2).item()
     mae = torch.abs(out1 - out2).mean().item()
-    cosine_sim = torch.nn.functional.cosine_similarity(
-        out1.flatten(), out2.flatten(), dim=0
-    ).item()
+    cosine_sim = torch.nn.functional.cosine_similarity(out1.flatten(), out2.flatten(), dim=0).item()
     max_diff = torch.max(torch.abs(out1 - out2)).item()
 
     print(f"\n=== Similarity between {name1} and {name2} ===")
