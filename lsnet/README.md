@@ -111,15 +111,15 @@ Robustness evaluation on ImageNet-C, ImageNet-A, ImageNet-R, and ImageNet-Sketch
 
 Our quick experiments indicate that substituting Softplus for ELU as the linear attention kernel is a promising refinement:
 
-1. It achieves higher cosine similarity compared to scaled dot-product attention.
+1. It achieves higher cosine similarity with scaled dot-product attention.
 2. It attains improved accuracy on the ImageNet-1K dataset.
 3. It enables greater GPU throughput (measured on a RTX4090).
 
-|       name       |  kernel  | cos_sim  | complexity | throughput | top1 |                                          log                                           |
-|:----------------:|:--------:|:--------:|:----------:|:----------:|:----:|:--------------------------------------------------------------------------------------:|
-|    attention     |    -     |    -     |   O(n^2)   |   17885    | 75.4 |   [log](logs/refine/recnext_t_without_distill_300e_scaled_dot_product_attention.txt)   |
-| linear attention | softplus | 0.996636 |    O(n)    |   17839    | 75.3 | [log](logs/refine/recnext_t_without_distill_300e_linear_attention_softplus_kernel.txt) |
-| linear attention |   elu    | 0.995216 |    O(n)    |   17796    | 75.2 |   [log](logs/refine/recnext_t_without_distill_300e_linear_attention_elu_kernel.txt)    |
+| model |     variant      |  kernel  | cos_sim  | complexity | throughput | top1 |                                          log                                           |
+|:-----:|:----------------:|:--------:|:--------:|:----------:|:----------:|:----:|:--------------------------------------------------------------------------------------:|
+|   T   |    attention     |    -     |    -     |   O(n^2)   |   17885    | 75.4 |   [log](logs/refine/recnext_t_without_distill_300e_scaled_dot_product_attention.txt)   |
+|   T   | linear attention | softplus | 0.996636 |    O(n)    |   17839    | 75.3 | [log](logs/refine/recnext_t_without_distill_300e_linear_attention_softplus_kernel.txt) |
+|   T   | linear attention |   elu    | 0.995216 |    O(n)    |   17796    | 75.2 |   [log](logs/refine/recnext_t_without_distill_300e_linear_attention_elu_kernel.txt)    |
 
 ```bash
 python model/profile.py --seed 42 --resolution 8,8 --batch-size 16 --kernel softplus
