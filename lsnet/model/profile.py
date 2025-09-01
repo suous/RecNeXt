@@ -6,6 +6,17 @@ import torch.nn as nn
 from torch.nn.functional import scaled_dot_product_attention
 
 
+class Elu(nn.Module):
+    def forward(self, x):
+        return nn.functional.elu(x) + 1.0
+
+
+class Softplus(nn.Module):
+    def forward(self, x):
+        # beta=3.5 is an empirical value for higher correlation with scaled dot product attention.
+        return nn.functional.softplus(x, beta=3.5)
+
+
 class LinearAttention3(nn.Module):
     """
     The computational complexity is quadratic relative to the sequence length.
@@ -22,18 +33,19 @@ class LinearAttention3(nn.Module):
         x = u / qk.mean(dim=-1, keepdims=True)     # [n, c] / [n, 1] -> [n, c]
     """
 
-    def __init__(self, dim, **kwargs):
+    def __init__(self, dim, kernel=Elu(), **kwargs):
         super().__init__()
         self.head_dim = dim // 2
         self.qk = nn.Conv2d(dim, dim, kernel_size=1)
         self.pe = nn.Conv2d(dim, dim, kernel_size=3, padding=1, groups=dim)
+        self.kernel = kernel
 
     def forward(self, x):
         b, c, h, w = x.shape
         n = h * w
         s = n**-0.5
 
-        qk = nn.functional.elu(self.qk(x)) + 1.0
+        qk = self.kernel(self.qk(x))
         (q, k), v = qk.view(b, 2, self.head_dim, n).unbind(dim=1), x
 
         qk = q.transpose(-1, -2) @ k                             # [b, n, n]
@@ -59,18 +71,19 @@ class LinearAttention4(nn.Module):
         x = u / d                                  # [n, c] / [n, 1] -> [n, c]
     """
 
-    def __init__(self, dim, **kwargs):
+    def __init__(self, dim, kernel=Elu(), **kwargs):
         super().__init__()
         self.head_dim = dim // 2
         self.qk = nn.Conv2d(dim, dim, kernel_size=1)
         self.pe = nn.Conv2d(dim, dim, kernel_size=3, padding=1, groups=dim)
+        self.kernel = kernel
 
     def forward(self, x):
         b, c, h, w = x.shape
         n = h * w
         s = n**-0.5
 
-        qk = nn.functional.elu(self.qk(x)) + 1.0
+        qk = self.kernel(self.qk(x))
         (q, k), v = qk.view(b, 2, self.head_dim, n).unbind(dim=1), x
 
         q_t = q.transpose(-1, -2)                                   # [b, n, c]
@@ -132,6 +145,7 @@ def test_modules(
     dim=64,
     num_runs=1000,
     compile=False,
+    kernel="softplus",
 ):
     """Test the three attention modules with specified parameters."""
     if device is None:
@@ -144,6 +158,9 @@ def test_modules(
     print(f"Dimension: {dim}")
     print(f"Number of runs: {num_runs}")
     print(f"Pytorch Compiled: {compile}")
+    print(f"Kernel: {kernel}")
+
+    kernel = {"elu": Elu(), "softplus": Softplus(), "relu": nn.ReLU()}[kernel]
 
     height, width = resolution
 
@@ -155,8 +172,8 @@ def test_modules(
 
     # LinearAttention3 and LinearAttention4 are equivalent
     # Attention may run faster with flash attention
-    model3 = LinearAttention3(dim).to(device)
-    model4 = LinearAttention4(dim).to(device)
+    model3 = LinearAttention3(dim, kernel).to(device)
+    model4 = LinearAttention4(dim, kernel).to(device)
     model_attention = Attention(dim).to(device)
 
     model4.load_state_dict(model3.state_dict())
@@ -244,6 +261,7 @@ def main():
     parser.add_argument("--dim", type=int, default=64, help="Dimension")
     parser.add_argument("--num-runs", type=int, default=1000, help="Number of runs for speed test")
     parser.add_argument("--compile", action="store_true", help="Compile the model")
+    parser.add_argument("--kernel", type=str, default="softplus", choices=["elu", "softplus", "relu"], help="Activation kernel")
 
     args = parser.parse_args()
     resolution = tuple(map(int, args.resolution.split(",")))
@@ -255,6 +273,7 @@ def main():
         dim=args.dim,
         num_runs=args.num_runs,
         compile=args.compile,
+        kernel=args.kernel,
     )
 
 
