@@ -109,17 +109,65 @@ Robustness evaluation on ImageNet-C, ImageNet-A, ImageNet-R, and ImageNet-Sketch
 
 ## Promising refinement
 
-Our quick experiments indicate that substituting Softplus for ELU as the linear attention kernel is a promising refinement:
+Our quick experiments indicate that:
 
-1. It achieves higher cosine similarity with scaled dot-product attention.
-2. It attains improved accuracy on the ImageNet-1K dataset.
-3. It enables greater GPU throughput (measured on a RTX4090).
+- Substituting Softplus for ELU as the linear attention kernel is a promising refinement:
+  - It achieves higher cosine similarity with scaled dot-product attention.
+  - It attains improved accuracy on the ImageNet-1K dataset.
+  - It enables greater GPU throughput (measured on a RTX 4090).
+- Replacing the MLP in the final stage with an RMSNorm-equipped Gated MLP further enhances performance:  
+  - The bias-free Gated MLP not only improves accuracy but also increases GPU throughput (measured on an RTX 4090).  
+  - Applying Gated MLPs to earlier stages accelerates convergence, though with diminishing returns in final accuracy.  
+  - However, this modification increases the total parameter count from 12M to 14M.
 
-| model |     variant      |  kernel  | cos_sim  | complexity | throughput | top1 |                                          log                                           |
-|:-----:|:----------------:|:--------:|:--------:|:----------:|:----------:|:----:|:--------------------------------------------------------------------------------------:|
-|   T   |    attention     |    -     |    -     |   O(n^2)   |   17885    | 75.4 |   [log](logs/refine/recnext_t_without_distill_300e_scaled_dot_product_attention.txt)   |
-|   T   | linear attention | softplus | 0.996636 |    O(n)    |   17839    | 75.3 | [log](logs/refine/recnext_t_without_distill_300e_linear_attention_softplus_kernel.txt) |
-|   T   | linear attention |   elu    | 0.995216 |    O(n)    |   17796    | 75.2 |   [log](logs/refine/recnext_t_without_distill_300e_linear_attention_elu_kernel.txt)    |
+```python
+class GatedMLP(nn.Module):
+    def __init__(self, dim, hidden_dim=None):
+        super().__init__()
+        hidden_dim = int(hidden_dim)
+        self.fi = nn.Conv2d(dim, hidden_dim * 2, kernel_size=1, bias=False)
+        self.fo = nn.Conv2d(hidden_dim, dim, kernel_size=1, bias=False)
+
+    def forward(self, x):
+        x1, x2 = self.fi(x).chunk(2, dim=1)
+        x = x1 * nn.functional.silu(x2)
+        return self.fo(x)
+
+
+class RMSNorm(nn.Module):
+    def __init__(self, dim, eps=1e-5):
+        super().__init__()
+        self.dim = dim
+        self.eps = eps
+        self.weight = nn.Parameter(torch.ones(dim))
+
+    def forward(self, x):
+        # for higher gpu throughput
+        norm = x.norm(2, dim=1, keepdim=True)
+        rms = norm / (x.shape[1] ** 0.5)
+        x_normed = x / (rms + self.eps)
+        # for lower coreml latency
+        # x_normed = x * torch.rsqrt(x.pow(2).mean(1, keepdim=True) + self.eps)
+        return x_normed * self.weight.view(1, -1, 1, 1)
+
+    def extra_repr(self):
+        return f"normalized_shape={self.dim}"
+  
+if stage == 3:
+    self.channel_mixer = nn.Sequential(
+        RMSNorm(out_channels),
+        GatedMLP(out_channels, out_channels * mlp_ratio),
+    )
+
+model_args = dict(embed_dim=(64, 128, 256, 512), depth=(0, 2, 8, 10), mlp_ratios=(2, 2, 2, 1.25), drop_path_rate=drop_path_rate, split_rates=(4, 4, 4, 4), share_stage=3)
+```
+
+| model |mlp|     variant      |  kernel  | cos_sim  | complexity | throughput | top1 |                                          log                                           |
+|:-----:|:--------:|:----------------:|:--------:|:--------:|:----------:|:----------:|:----:|:--------------------------------------------------------------------------------------:|
+|   T   |4 x mlp|    attention     |    -     |    -     |   O(n^2)   |   17885    | 75.4 |   [log](logs/refine/recnext_t_without_distill_300e_scaled_dot_product_attention.txt)   |
+|   T   |4 x mlp| linear attention | softplus | 0.996636 |    O(n)    |   17839    | 75.3 | [log](logs/refine/recnext_t_without_distill_300e_linear_attention_softplus_kernel.txt) |
+|   T   |4 x mlp| linear attention |   elu    | 0.995216 |    O(n)    |   17796    | 75.2 |   [log](logs/refine/recnext_t_without_distill_300e_linear_attention_elu_kernel.txt)    |
+|   T   |3 x mlp + gated| linear attention |   elu    | 0.995216 |    O(n)    |   18348    | 75.7 |   [log](logs/refine/recnext_t_without_distill_300e_stage_last_rmsnorm_gated_mlp.txt)    |
 
 ```bash
 python model/profile.py --seed 42 --resolution 8,8 --batch-size 16 --kernel softplus
@@ -149,5 +197,6 @@ fd txt logs/refine -x sh -c 'printf "%.1f %s\n" "$(jq -s "map(.test_acc1) | max"
 75.2 logs/refine/recnext_t_without_distill_300e_linear_attention_elu_kernel.txt
 75.3 logs/refine/recnext_t_without_distill_300e_linear_attention_softplus_kernel.txt
 75.4 logs/refine/recnext_t_without_distill_300e_scaled_dot_product_attention.txt
+75.7 logs/refine/recnext_t_without_distill_300e_stage_last_rmsnorm_gated_mlp.txt
 ```
 </details>
